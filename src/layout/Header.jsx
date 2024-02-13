@@ -112,7 +112,7 @@ function Header(props) {
                   alt="Solutions dgr"
                 />
               </h5>
-              {/* <h4 className="hed-yellow">37,7 USDT </h4>
+              {/* <h4 className="hed-yellow">37,7 WETH </h4>
               <h4 className="hed-prpl">2 NFTs</h4> */}
               {pending <= 0
                 ? (

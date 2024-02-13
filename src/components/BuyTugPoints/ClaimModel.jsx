@@ -51,7 +51,7 @@ export function PointsClaimModal(props) {
             <Col sm={6} className="text-end">
               <Button className="synth-tokenbtn">
                 <img src="../assets/usdt-logo.png" width="25px" className="ethr" alt="ETH" />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>
@@ -102,7 +102,7 @@ export function PointsClaimSuccessModal(props) {
           <Row className="w-100">
             <Col sm={12}>
               <small className="per-dair d-block w-100">
-                You have cliamed
+                You have claimed
                 {' '}
                 <span className="climsml">48,86579 synth ETH tokens</span>
               </small>
@@ -118,7 +118,7 @@ export function PointsClaimSuccessModal(props) {
             <Col sm={6} className="text-end">
               <Button className="synth-tokenbtn">
                 <img src="../assets/usdt-logo.png" alt="ETH" />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>

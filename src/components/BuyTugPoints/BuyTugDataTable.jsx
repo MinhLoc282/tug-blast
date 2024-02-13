@@ -32,6 +32,7 @@ import {
 import { FAKE_DATA } from '../../backend/fakeApi';
 import gldLogo from '../../assets/images/gld.png';
 import maticLogo from '../../assets/images/matic.png';
+import msftLogo from '../../assets/images/microsoft.png';
 import tslaLogo from '../../assets/images/tsla.png';
 import dogeLogo from '../../assets/images/doge.png';
 import { CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS, PYTH_SC, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../../constant';
@@ -109,7 +110,7 @@ function TokenSuccessModal(props) {
                   alt="ETH"
                 /> */}
                 {symbols[0] === 'BTC' && <BTCIcon width="25px" className="me-2 ethr" />}
-                {symbols[0] === 'BNB' && <BNBIcon width="25px" className="me-2 ethr" />}
+                {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
 
                 {symbols[0] === 'TSLA' && <img
                   src={tslaLogo}
@@ -122,9 +123,9 @@ function TokenSuccessModal(props) {
 
                 {symbols[1] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
 
-                {symbols[1] === 'MATIC' && (
+                {symbols[1] === 'MSFT' && (
                 <img
-                  src={maticLogo}
+                  src={msftLogo}
                   className="me-2 ethr"
                   style={{
                     width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
@@ -133,20 +134,9 @@ function TokenSuccessModal(props) {
                 />
                 )}
 
-                {symbols[1] === 'GLD' && (
+                {symbols[1] === 'XAU' && (
                 <img
                   src={gldLogo}
-                  className="me-2 ethr"
-                  style={{
-                    width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
-                  }}
-                  alt=""
-                />
-                )}
-
-                {symbols[1] === 'DOGE' && (
-                <img
-                  src={dogeLogo}
                   className="me-2 ethr"
                   style={{
                     width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
@@ -247,7 +237,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
         const newBalance = await tokenContact.methods.balanceOf(address).call();
         const balanceToWei = web3.utils.fromWei(newBalance);
-        const roundBalance = Math.round(Number(balanceToWei) * 100) / 100;
+        const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
   
         setBalance(roundBalance);
       } catch (error) {
@@ -374,7 +364,7 @@ function ButTugModal(props) {
         const priceIds = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
           '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
-          "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MATIC/USD price id in testnet
+          "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MSFT/USD price id in testnet
         ];
 
         priceUpdateData = await connectionEVM.getPriceFeedsUpdateData(priceIds);
@@ -464,7 +454,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, amount)
+          .approve(TUGPAIR_ETH_BTC, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
@@ -477,7 +467,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, amount)
+          .approve(TUGPAIR_ETH_MSFT, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
@@ -490,7 +480,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, amount)
+          .approve(TUGPAIR_BTC_XAU, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       }
 
@@ -532,8 +522,8 @@ function ButTugModal(props) {
                     <Col xs={4}>
                       <span onClick={() => { setsideS(0); setDropdownTitle(`${symbols[0]} Side`); }} className="token-val">
                         {symbols[0] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
-                        {symbols[0] === 'BNB' && <BNBIcon width="25px" height="32px" className="me-2 ethr" />}
-                        {symbols[0] === 'TSLA' && (
+                        {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
+                        {symbols[0] === 'MSFT' && (
                         <img
                           src={tslaLogo}
                           className="me-2 ethr"
@@ -548,8 +538,8 @@ function ButTugModal(props) {
                     </Col>
                     <Col xs={4}>
                       <span onClick={() => { setsideS(1); setDropdownTitle(`${symbols[1]} Side`); }} className="token-val">
-                        {symbols[1] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
-                        {symbols[1] === 'GLD' && (
+                        {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
+                        {symbols[1] === 'XAU' && (
                         <img
                           src={gldLogo}
                           className="me-2 ethr"
@@ -559,9 +549,9 @@ function ButTugModal(props) {
                           alt=""
                         />
                         )}
-                        {symbols[1] === 'MATIC' && (
+                        {symbols[1] === 'MSFT' && (
                         <img
-                          src={maticLogo}
+                          src={msftLogo}
                           className="me-2 ethr"
                           style={{
                             width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
@@ -628,7 +618,7 @@ function ButTugModal(props) {
                   <div className="loading-content">
                     <div>Waiting For Confirmation</div>
 
-                    {Number(approvedAmount) ? <div>{`Swapping ${amount} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
+                    {Number(approvedAmount) ? <div>{`Swapping ${web3.utils.fromWei(amount, 'gwei')} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
 
                     <div>Confirm this transaction in your wallet</div>
                   </div>
@@ -639,7 +629,7 @@ function ButTugModal(props) {
                   <div className="amount-dai select-token">
                     <Row className="w-100">
                       <Col xs={6}>
-                        <p>Amount</p>
+                        <p>Amount(gwei)</p>
 
                         <input
                           className="buy-amount-input"
@@ -714,7 +704,7 @@ function ButTugModal(props) {
                       </button>
                       )}
 
-                      {Number(approvedAmount) > Number(amount) && (
+                      {Number(approvedAmount) >= Number(amount) && (
                       <button
                         type="button"
                         onClick={SuccessTug}
@@ -824,7 +814,8 @@ function BuyTugDataTable() {
 
       const tokenRegistryContact = new web3.eth.Contract(TOKEN_REGISTRY_ABI, TOKEN_REGISTRY);
 
-      let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]]
+      // let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]]
+      let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[2]]
 
       let totalData = [];
 
@@ -1023,12 +1014,12 @@ function BuyTugDataTable() {
       name: 'Tug Pair Token A/Token B',
       selector: (row) => row.pair,
       cell: (row) => {
-        if (row.token0Symbol === 'BTC' && row.token1Symbol === 'ETH') {
+        if (row.token0Symbol === 'ETH' && row.token1Symbol === 'BTC') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">
-                <BTCIcon width="1rem" className="iconSvg " />
                 <ETHIcon width="1rem" className="iconSvg ethIcon" />
+                <BTCIcon width="1rem" className="iconSvg " />
               </span>
               <span className="tugPairTitle">
                 {row.token0Symbol}
@@ -1037,12 +1028,12 @@ function BuyTugDataTable() {
               </span>
             </div>
           );
-        } else if (row.token0Symbol === 'BNB' && row.token1Symbol === 'MATIC') {
+        } else if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">
-                <BNBIcon width="1rem" className="iconSvg " />
-                <img src={maticLogo} className="iconSvg btcIcon" style={{ width: '1rem', top: "3px", borderRadius: '100%' }} alt="" />
+                <ETHIcon width="1rem" className="iconSvg" />
+                <img src={msftLogo} className="iconSvg btcIcon" style={{ width: '1rem', top: "9px", borderRadius: '100%' }} alt="" />
               </span>
               <span className="tugPairTitle">
                 {row.token0Symbol}
@@ -1051,7 +1042,7 @@ function BuyTugDataTable() {
               </span>
             </div>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GLD') {
+        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'XAU') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">

@@ -24,6 +24,7 @@ import { ReactComponent as ETHIcon } from '../../assets/images/eth.svg';
 import { FAKE_DATA } from '../../backend/fakeApi';
 import gldLogo from '../../assets/images/gld.png';
 import maticLogo from '../../assets/images/matic.png';
+import msftLogo from '../../assets/images/microsoft.png';
 import tslaLogo from '../../assets/images/tsla.png';
 import dogeLogo from '../../assets/images/doge.png';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
@@ -231,7 +232,7 @@ function ButTugModal(props) {
 
       const newBalance = await web3.eth.getBalance(address);
       const balanceToWei = web3.utils.fromWei(newBalance);
-      const roundBalance = Math.round(Number(balanceToWei) * 100) / 100;
+      const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
       setBalance(roundBalance);
     } catch (error) {
     }
@@ -379,7 +380,7 @@ function ButTugModal(props) {
       //   console.log('============getPrice==============', getPrice);
       
       await tugPairContract.methods
-        .deposit(Number(amount), Number(sideS), priceUpdateData)
+        .deposit(Number(amount * 10**9), Number(sideS), priceUpdateData)
         .send({ from: address, value: updateFee, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
 
       setLoading(false);
@@ -432,7 +433,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, 100000)
+          .approve(TUGPAIR_ETH_BTC, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
@@ -445,7 +446,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, 100000)
+          .approve(TUGPAIR_ETH_MSFT, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
@@ -458,7 +459,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, 100000)
+          .approve(TUGPAIR_BTC_XAU, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
       }
 
@@ -498,8 +499,8 @@ function ButTugModal(props) {
                     <Col xs={4}>
                       <span onClick={() => { setDropdownTitle(`${symbols[0]} Side`); setsideS(0); getShares(amount); }} className="token-val">
                         {symbols[0] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
-                        {symbols[0] === 'BNB' && <BNBIcon width="25px" height="32px" className="me-2 ethr" />}
-                        {symbols[0] === 'TSLA' && (
+                        {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
+                        {symbols[0] === 'MSFT' && (
                         <img
                           src={tslaLogo}
                           className="me-2 ethr"
@@ -514,8 +515,8 @@ function ButTugModal(props) {
                     </Col>
                     <Col xs={4}>
                       <span onClick={() => { setDropdownTitle(`${symbols[1]} Side`); setsideS(1); getShares(amount); }} className="token-val">
-                      {symbols[1] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
-                        {symbols[1] === 'GLD' && (
+                      {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
+                        {symbols[1] === 'XAU' && (
                         <img
                           src={gldLogo}
                           className="me-2 ethr"
@@ -525,9 +526,9 @@ function ButTugModal(props) {
                           alt=""
                         />
                         )}
-                        {symbols[1] === 'MATIC' && (
+                        {symbols[1] === 'MSFT' && (
                         <img
-                          src={maticLogo}
+                          src={msftLogo}
                           className="me-2 ethr"
                           style={{
                             width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
@@ -564,7 +565,7 @@ function ButTugModal(props) {
                 <div className="amount-dai select-token">
                   <Row className="w-100">
                     <Col xs={6}>
-                      <p>Amount</p>
+                      <p>Amount(gwei)</p>
                       <input
                         className="buy-amount-input"
                         value={amount}
@@ -628,7 +629,7 @@ function ButTugModal(props) {
                     </button>
                     )}
 
-                    {Number(approvedAmount) > Number(amount) && (
+                    {Number(approvedAmount) >= Number(amount) && (
                     <button type="button" onClick={SuccessTug}>
                       BUY
                     </button>
@@ -705,27 +706,18 @@ function PositionDataTable() {
       for (const symbol of data.symbols) {
         const priceRes = data.productPrice.get(symbol);
         
-        if (priceRes.price && symbol === 'Crypto.BTC/USD') {
-          priceSaved.btc = priceRes.price
-        } 
         if (priceRes.price && symbol === 'Crypto.ETH/USD') {
           priceSaved.eth = priceRes.price
         }
-        if (priceRes.price && symbol === 'Crypto.BNB/USD') {
-          priceSaved.bnb = priceRes.price
+        if (priceRes.price && symbol === 'Crypto.BTC/USD') {
+          priceSaved.btc = priceRes.price
         } 
-        if (priceRes.price && symbol === 'Equity.US.GLD/USD') {
-          priceSaved.gld = priceRes.price
-        } 
-        if (priceRes.price && symbol === 'Equity.US.TSLA/USD') {
-          priceSaved.tsla = priceRes.price
-        } 
-        if (priceRes.price && symbol === 'Crypto.DOGE/USD') {
-          priceSaved.doge = priceRes.price
+        if (priceRes.price && symbol === 'Equity.US.MSFT/USD') {
+          priceSaved.msft = priceRes.price
         }
-        if (priceRes.price && symbol === 'Crypto.MATIC/USD') {
-          priceSaved.matic = priceRes.price
-        } 
+        if (priceRes.price && symbol === 'Metal.XAU/USD') {
+          priceSaved.xau = priceRes.price
+        }
       }
 
       setPrice(priceSaved)
@@ -736,13 +728,7 @@ function PositionDataTable() {
 
       const result2 = FAKE_DATA.tugPairs;
 
-      let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1]]
-
-      if (priceSaved.gld && priceSaved.btc) {
-        pairsArry.push(FAKE_DATA.tugPairs[2])
-      } else if (priceSaved.tsla && priceSaved.doge) {
-        pairsArry.push(FAKE_DATA.tugPairs[3])
-      }
+      let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[2]]
       
       let totalData = [];
 
@@ -815,30 +801,24 @@ function PositionDataTable() {
         let token1CurrentPrice;
         let token0CurrentPrice;
 
-        if (token1SymbolRes === 'ETH/USD' && token0SymbolRes === 'BTC/USD') {
-          token1Symbol = token1SymbolRes.slice(0, 3);
-          token0Symbol = token0SymbolRes.slice(0, 3);
+        if (token1SymbolRes === 'Crypto.BTC/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
+          token1Symbol = 'BTC';
+          token0Symbol = 'ETH';
           
-          token1CurrentPrice = Number(priceSaved.eth)
-          token0CurrentPrice = Number(priceSaved.btc)
-        } else if (token1SymbolRes === 'MATIC/USD' && token0SymbolRes === 'BNB/USD') {
-          token1Symbol = token1SymbolRes.slice(0, 5);
-          token0Symbol = token0SymbolRes.slice(0, 3);
+          token1CurrentPrice = Number(priceSaved.btc)
+          token0CurrentPrice = Number(priceSaved.eth)
+        } else if (token1SymbolRes === 'Equity.US.MSFT/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
+          token1Symbol = 'MSFT';
+          token0Symbol = 'ETH';
         
-          token1CurrentPrice = Number(priceSaved.matic)
-          token0CurrentPrice = Number(priceSaved.bnb)
-        } else if (token1SymbolRes === 'US.GLD/USD' && token0SymbolRes === 'BTC/USD') {
-          token1Symbol = token1SymbolRes.slice(3, 6);
-          token0Symbol = token0SymbolRes.slice(0, 3);
+          token1CurrentPrice = Number(priceSaved.msft)
+          token0CurrentPrice = Number(priceSaved.eth)
+        } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
+          token1Symbol = 'XAU';
+          token0Symbol = 'BTC';
 
-          token1CurrentPrice = Number(priceSaved.gld)
+          token1CurrentPrice = Number(priceSaved.xau)
           token0CurrentPrice = Number(priceSaved.btc)
-        } else if (token1SymbolRes === 'DOGE/USD' && token0SymbolRes === 'US.TSLA/USD') {
-          token1Symbol = token1SymbolRes.slice(0, 4);
-          token0Symbol = token0SymbolRes.slice(3, 7);
-      
-          token1CurrentPrice = Number(priceSaved.doge)
-          token0CurrentPrice = Number(priceSaved.tsla)
         }
 
         // ======= setPrice end ==========
@@ -979,37 +959,38 @@ function PositionDataTable() {
             </p>
           );
         }
-        if (row.token0Symbol === 'BTC' && row.token1Symbol === 'ETH') {
+        if (row.token0Symbol === 'ETH' && row.token1Symbol === 'BTC') {
           return (
             <p className="tugPairTitle">
               <ul className="tugPUL ms">
+                <li>
+                  <ETHIcon width="1rem" className="iconSvg" />
+                  {row.token1Symbol}
+                  
+                </li>
                 <li>
                   <BTCIcon width="1rem" height="1.5rem" className="iconSvg" />
                   {row.token0Symbol}
                 </li>
-                <li>
-                <ETHIcon width="1rem" className="iconSvg" />
-                  {row.token1Symbol}
-                </li>
               </ul>
             </p>
           );
-        } else if (row.token0Symbol === 'BNB' && row.token1Symbol === 'MATIC') {
+        } else if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
           return (
             <p className="tugPairTitle">
               <ul className="tugPUL ms">
                 <li>
-                <BNBIcon width="1rem" className="iconSvg " />
+                <ETHIcon width="1rem" className="iconSvg" />
                 {row.token0Symbol}
                 </li>
                 <li>
-                <img src={maticLogo} className="iconSvg" style={{ width: '1rem', minWidth: '16px', borderRadius: '100%' }} alt="" />
+                <img src={msftLogo} className="iconSvg" style={{ width: '1rem', minWidth: '16px', borderRadius: '100%' }} alt="" />
                   {row.token1Symbol}
                 </li>
               </ul>
             </p>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GLD') {
+        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'XAU') {
           return (
             <p className="tugPairTitle">
               <ul className="tugPUL ms">

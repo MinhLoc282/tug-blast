@@ -68,7 +68,7 @@ export function TugSelect(props) {
         <div className="amount-dai">
           <Row className="w-100">
             <Col xs={6}>
-              <p>Amount</p>
+              <p>Amount(gwei)</p>
               <h1>0.00001</h1>
             </Col>
             <Col xs={6}>
@@ -98,7 +98,7 @@ export function TugSelect(props) {
         <div className="amount-dai select-token">
           <Row className="w-100">
             <Col xs={6}>
-              <p>Amount</p>
+              <p>Amount(gwei)</p>
               <h1>0.00001</h1>
             </Col>
             <Col xs={6}>

@@ -18,6 +18,8 @@ import { ReactComponent as BTCIcon } from '../../assets/images/btc.svg';
 import { ReactComponent as BNBIcon } from '../../assets/images/bnb.svg';
 import { ReactComponent as ETHIcon } from '../../assets/images/eth.svg';
 import maticLogo from '../../assets/images/matic.png';
+import msftLogo from '../../assets/images/microsoft.png';
+import gldLogo from '../../assets/images/gld.png';
 
 import { FAKE_DATA } from '../../backend/fakeApi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
@@ -340,7 +342,7 @@ function ClaimProceedDataTable() {
       const tokenRegistryContact = new web3.eth.Contract(TOKEN_REGISTRY_ABI, TOKEN_REGISTRY);// tokenRegistryContractObj
 
       // tugPairs
-      const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]];
+      const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[2]];
       // get upcollected Epochs
       let totalData = [];
       let totalCostBasis = 0;
@@ -375,6 +377,9 @@ function ClaimProceedDataTable() {
             } else if (token1SymbolRes === 'Equity.US.MSFT/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
               token1Symbol = 'MSFT';
               token0Symbol = 'ETH';
+            } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
+              token1Symbol = 'XAU';
+              token0Symbol = 'BTC';
             }
 
             claimList.push({ pairId: pairsArry[item].id, epochNumber: [Number(currentUserEpoch.latestEpoch)] });
@@ -493,7 +498,39 @@ function ClaimProceedDataTable() {
             </span>
           );
         }
-        if (row.token0Symbol === 'BTC' && row.token1Symbol === 'ETH') {
+        if (row.token0Symbol === 'ETH' && row.token1Symbol === 'BTC') {
+          return (
+            <span className="tugPairTitle">
+              <ul className="tugPUL ms">
+                <li>
+                  <ETHIcon width="1rem" height="1rem" className="iconSvg" />
+                  {row.token0Symbol}
+                </li>
+                <li>
+                  <BTCIcon width="1rem" height="1rem" className="iconSvg " />
+                  {row.token1Symbol}
+                </li>
+              </ul>
+
+            </span>
+          );
+        } else if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
+          return (
+            <span className="tugPairTitle">
+              <ul className="tugPUL ms">
+                <li>
+                  <ETHIcon width="1rem" height="1rem" className="iconSvg" />
+                  {row.token0Symbol}
+                </li>
+                <li>
+                <img src={msftLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
+                  {row.token1Symbol}
+                </li>
+              </ul>
+
+            </span>
+          );
+        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'XAU') {
           return (
             <span className="tugPairTitle">
               <ul className="tugPUL ms">
@@ -502,23 +539,7 @@ function ClaimProceedDataTable() {
                   {row.token0Symbol}
                 </li>
                 <li>
-                  <ETHIcon width="1rem" height="1rem" className="iconSvg" />
-                  {row.token1Symbol}
-                </li>
-              </ul>
-
-            </span>
-          );
-        } else if (row.token0Symbol === 'BNB' && row.token1Symbol === 'MATIC') {
-          return (
-            <span className="tugPairTitle">
-              <ul className="tugPUL ms">
-                <li>
-                  <BNBIcon width="1rem" height="1rem" className="iconSvg " />
-                  {row.token0Symbol}
-                </li>
-                <li>
-                <img src={maticLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
+                <img src={gldLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
                   {row.token1Symbol}
                 </li>
               </ul>
