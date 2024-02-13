@@ -582,7 +582,7 @@ function ButTugModal(props) {
                     </Col>
                     <Col xs={6} className="text-end">
                       <p className="da-blcn">
-                        USDT Balance:
+                        WETH Balance:
                         {' '}
                         {balance}
                       </p>
@@ -592,7 +592,7 @@ function ButTugModal(props) {
                           width="25px"
                           alt="usdt-logo.png"
                         />
-                        USDT
+                        WETH
                       </Button>
                     </Col>
                   </Row>

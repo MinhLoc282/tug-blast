@@ -66,7 +66,7 @@ function BuyTugForm() {
         sort: 'disabled',
         width: 100,
       }, {
-        label: 'Current Payoff per USDT (A wins/B wins)',
+        label: 'Current Payoff per WETH (A wins/B wins)',
         field: 'wins',
         sort: 'disabled',
         width: 100,

@@ -1112,7 +1112,7 @@ function ClaimProceedDataTable() {
               {' '}
               <span className="climsml">48,86579 synth ETH tokens</span>
               {' '}
-              <span className="smal-blu">5893.39 USDT</span>
+              <span className="smal-blu">5893.39 WETH</span>
             </small>
           </div>
           <div className="amount-dai select-token">
@@ -1121,7 +1121,7 @@ function ClaimProceedDataTable() {
               {' '}
               <span className="climsml">456 synth META for</span>
               {' '}
-              <span className="smal-blu">5893.39 USDT</span>
+              <span className="smal-blu">5893.39 WETH</span>
             </small>
           </div>
           <div className="text-center">
@@ -1135,7 +1135,7 @@ function ClaimProceedDataTable() {
               {' '}
               for
               {' '}
-              <span className="smal-blu">2530.39 USDT</span>
+              <span className="smal-blu">2530.39 WETH</span>
             </small>
           </div>
           <div className="amount-dai" style={{ marginTop: '8px' }}>
@@ -1152,7 +1152,7 @@ function ClaimProceedDataTable() {
                     className="me-2"
                     style={{ width: '18px' }}
                   />
-                  USDT
+                  WETH
                 </Button>
               </Col>
             </Row>
@@ -1228,7 +1228,7 @@ function ClaimProceedDataTable() {
                     className="me-2"
                     style={{ width: '18px' }}
                   />
-                  USDT
+                  WETH
                 </Button>
               </Col>
             </Row>

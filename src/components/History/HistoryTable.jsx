@@ -149,7 +149,7 @@ function TugClaimSuccesModal(props) {
             <span className="smal-blu">
               {mspayoff}
               {' '}
-              USDT
+              WETH
             </span>
           </small>
         </div>
@@ -172,7 +172,7 @@ function TugClaimSuccesModal(props) {
             <span className="smal-blu">
               {ebpayoff}
               {' '}
-              USDT
+              WETH
             </span>
           </small>
         </div>
@@ -191,7 +191,7 @@ function TugClaimSuccesModal(props) {
                   className="me-2"
                   style={{ width: '18px' }}
                 />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>

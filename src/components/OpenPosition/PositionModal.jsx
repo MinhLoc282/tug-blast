@@ -62,7 +62,7 @@ export function TugSelect(props) {
               <p>$0.03</p>
               <p>$0.03</p>
             </Col>
-            <small className="per-dair">*per USDT of current prices</small>
+            <small className="per-dair">*per WETH of current prices</small>
           </Row>
         </div>
         <div className="amount-dai">
@@ -81,7 +81,7 @@ export function TugSelect(props) {
                     style={{ width: '18px' }}
                   />
                   {' '}
-                  USDT
+                  WETH
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>

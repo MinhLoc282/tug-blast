@@ -628,7 +628,7 @@ function ButTugModal(props) {
                   <div className="loading-content">
                     <div>Waiting For Confirmation</div>
 
-                    {Number(approvedAmount) ? <div>{`Swapping ${amount} USDT for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving USDT for Tug Finance'}
+                    {Number(approvedAmount) ? <div>{`Swapping ${amount} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
 
                     <div>Confirm this transaction in your wallet</div>
                   </div>
@@ -659,7 +659,7 @@ function ButTugModal(props) {
 
                       <Col xs={6} className="text-end">
                         <p className="da-blcn">
-                          USDT Balance:
+                          WETH Balance:
                           {' '}
                           {balance}
                         </p>
@@ -671,7 +671,7 @@ function ButTugModal(props) {
                             alt="usdt-logo.png"
                           />
 
-                          USDT
+                          WETH
                         </Button>
                       </Col>
                     </Row>
@@ -1127,7 +1127,7 @@ function BuyTugDataTable() {
 
     },
     {
-      name: 'Current payoff per USDT (A wins/B wins)',
+      name: 'Current payoff per WETH (A wins/B wins)',
       selector: (row) => (`$${row.currentPayoffA.toFixed(2)}/$${row.currentPayoffB.toFixed(2)}`),
       sortable: true,
       style: {

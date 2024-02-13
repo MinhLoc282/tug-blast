@@ -58,7 +58,7 @@ export function HistoryModal(props) {
                   className="me-2"
                   style={{ width: '18px' }}
                 />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>
@@ -111,7 +111,7 @@ export function HistoryAllModal(props) {
             {' '}
             <span className="climsml">48,86579 synth ETH tokens</span>
             {' '}
-            <span className="smal-blu">5893.39 USDT</span>
+            <span className="smal-blu">5893.39 WETH</span>
           </small>
         </div>
         <div className="amount-dai select-token">
@@ -120,7 +120,7 @@ export function HistoryAllModal(props) {
             {' '}
             <span className="climsml">456 synth META for</span>
             {' '}
-            <span className="smal-blu">5893.39 USDT</span>
+            <span className="smal-blu">5893.39 WETH</span>
           </small>
         </div>
         <div className="text-center">
@@ -134,7 +134,7 @@ export function HistoryAllModal(props) {
             {' '}
             for
             {' '}
-            <span className="smal-blu">2530.39 USDT</span>
+            <span className="smal-blu">2530.39 WETH</span>
           </small>
         </div>
         <div className="amount-dai" style={{ marginTop: '8px' }}>
@@ -151,7 +151,7 @@ export function HistoryAllModal(props) {
                   className="me-2 ethr"
                   style={{ width: '18px' }}
                 />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>

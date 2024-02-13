@@ -21,7 +21,7 @@ import maticLogo from '../../assets/images/matic.png';
 
 import { FAKE_DATA } from '../../backend/fakeApi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
-import { PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../../constant';
+import { PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
@@ -118,7 +118,7 @@ function TugClaimSuccesModal(props) {
             <span className="smal-blu">
               {mspayoff}
               {' '}
-              USDT
+              WETH
             </span>
           </small>
         </div>
@@ -141,7 +141,7 @@ function TugClaimSuccesModal(props) {
             <span className="smal-blu">
               {ebpayoff}
               {' '}
-              USDT
+              WETH
             </span>
           </small>
         </div>
@@ -164,7 +164,7 @@ function TugClaimSuccesModal(props) {
                   className="me-2"
                   style={{ width: '18px' }}
                 />
-                USDT
+                WETH
               </Button>
             </Col>
           </Row>
@@ -234,18 +234,32 @@ const claimAll = async (claimList, account, web3) => {
     .call();
 
 
-    // BNB - MATIC
+    // ETH - MSFT
     const priceIds2 = [
       '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
       "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MATIC/USD price id in testnet
     ];
 
-    // BNB - MATIC
+    // ETH - MSFT
     const priceUpdateData2 = await connectionEVM.getPriceFeedsUpdateData(priceIds2);
 
-    // BNB - MATIC
+    // ETH - MSFT
     const updateFee2 = await pythEvmContact.methods
     .getUpdateFee(priceUpdateData2)
+    .call();
+
+    // BTC - XAU
+    const priceIds3 = [
+      '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BNB/USD price id in testnet
+      "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // MATIC/USD price id in testnet
+    ];
+
+    // ETH - MSFT
+    const priceUpdateData3 = await connectionEVM.getPriceFeedsUpdateData(priceIds3);
+
+    // ETH - MSFT
+    const updateFee3 = await pythEvmContact.methods
+    .getUpdateFee(priceUpdateData3)
     .call();
 
     for (let i = 0; i < claimList.length; i++) {
@@ -267,6 +281,15 @@ const claimAll = async (claimList, account, web3) => {
           .send({
             from: account,
             value: updateFee2,
+            maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
+          });
+      } else if (claimList[i].pairId === TUGPAIR_BTC_XAU && claimList[i].epochNumber.length !== 0) {
+        const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+        await ContractTugPair.methods
+          .collectWinnings(claimList[i].epochNumber, priceUpdateData3)
+          .send({
+            from: account,
+            value: updateFee3,
             maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
           });
       }
