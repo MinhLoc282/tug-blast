@@ -215,58 +215,43 @@ const claimAll = async (claimList, account, web3) => {
     const connectionEVM = new EvmPriceServiceConnection(
       "https://hermes.pyth.network"
     ); // See Price Service endpoints section below for other endpoints
-    
-    // BTC - ETH
-    const priceIds1 = [
-      // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
-      '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BTC/USD price id in testnet
-      "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // ETH/USD price id in testnet
-    ];
-    
-    // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
-    // chain. `getPriceFeedsUpdateData` creates the update data which can be submitted to your contract. Then your contract should
-    // call the Pyth Contract with this data.
-    
-    // BTC - ETH
-    const priceUpdateData1 = await connectionEVM.getPriceFeedsUpdateData(priceIds1);
-    
-    // BTC - ETH
-    const updateFee1 = await pythEvmContact.methods
-    .getUpdateFee(priceUpdateData1)
-    .call();
 
+    // // ETH - MSFT
+    // const priceIds2 = [
+    //   '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
+    //   "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MATIC/USD price id in testnet
+    // ];
 
-    // ETH - MSFT
-    const priceIds2 = [
-      '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
-      "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MATIC/USD price id in testnet
-    ];
+    // // ETH - MSFT
+    // const priceUpdateData2 = await connectionEVM.getPriceFeedsUpdateData(priceIds2);
 
-    // ETH - MSFT
-    const priceUpdateData2 = await connectionEVM.getPriceFeedsUpdateData(priceIds2);
-
-    // ETH - MSFT
-    const updateFee2 = await pythEvmContact.methods
-    .getUpdateFee(priceUpdateData2)
-    .call();
-
-    // BTC - XAU
-    const priceIds3 = [
-      '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BNB/USD price id in testnet
-      "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // MATIC/USD price id in testnet
-    ];
-
-    // ETH - MSFT
-    const priceUpdateData3 = await connectionEVM.getPriceFeedsUpdateData(priceIds3);
-
-    // ETH - MSFT
-    const updateFee3 = await pythEvmContact.methods
-    .getUpdateFee(priceUpdateData3)
-    .call();
+    // // ETH - MSFT
+    // const updateFee2 = await pythEvmContact.methods
+    // .getUpdateFee(priceUpdateData2)
+    // .call();
 
     for (let i = 0; i < claimList.length; i++) {
       if (claimList[i].pairId === TUGPAIR_ETH_BTC && claimList[i].epochNumber.length !== 0) {
         const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
+
+        // BTC - ETH
+        const priceIds1 = [
+          // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
+          "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
+          '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
+        ];
+        
+        // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
+        // chain. `getPriceFeedsUpdateData` creates the update data which can be submitted to your contract. Then your contract should
+        // call the Pyth Contract with this data.
+        
+        // BTC - ETH
+        const priceUpdateData1 = await connectionEVM.getPriceFeedsUpdateData(priceIds1);
+        
+        // BTC - ETH
+        const updateFee1 = await pythEvmContact.methods
+        .getUpdateFee(priceUpdateData1)
+        .call();
 
         await ContractTugPair.methods
           .collectWinnings(claimList[i].epochNumber, priceUpdateData1)
@@ -276,17 +261,33 @@ const claimAll = async (claimList, account, web3) => {
             maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
           });
 
-      } else if (claimList[i].pairId === TUGPAIR_ETH_MSFT && claimList[i].epochNumber.length !== 0) {
-        const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-        await ContractTugPair.methods
-          .collectWinnings(claimList[i].epochNumber, priceUpdateData2)
-          .send({
-            from: account,
-            value: updateFee2,
-            maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
-          });
-      } else if (claimList[i].pairId === TUGPAIR_BTC_XAU && claimList[i].epochNumber.length !== 0) {
+      } 
+      // else if (claimList[i].pairId === TUGPAIR_ETH_MSFT && claimList[i].epochNumber.length !== 0) {
+      //   const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
+      //   await ContractTugPair.methods
+      //     .collectWinnings(claimList[i].epochNumber, priceUpdateData2)
+      //     .send({
+      //       from: account,
+      //       value: updateFee2,
+      //       maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
+      //     });
+      // } 
+      else if (claimList[i].pairId === TUGPAIR_BTC_XAU && claimList[i].epochNumber.length !== 0) {
         const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+        // BTC - XAU
+        const priceIds3 = [
+          '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
+          "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // GOLD/USD price id in testnet
+        ];
+
+        // ETH - MSFT
+        const priceUpdateData3 = await connectionEVM.getPriceFeedsUpdateData(priceIds3);
+
+        // ETH - MSFT
+        const updateFee3 = await pythEvmContact.methods
+        .getUpdateFee(priceUpdateData3)
+        .call();
+
         await ContractTugPair.methods
           .collectWinnings(claimList[i].epochNumber, priceUpdateData3)
           .send({
