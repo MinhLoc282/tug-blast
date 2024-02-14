@@ -134,7 +134,7 @@ function TokenSuccessModal(props) {
                 />
                 )}
 
-                {symbols[1] === 'XAU' && (
+                {symbols[1] === 'GOLD' && (
                 <img
                   src={gldLogo}
                   className="me-2 ethr"
@@ -208,7 +208,7 @@ function ButTugModal(props) {
           const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
       
           apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
-      } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
+      } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
           const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
       
           const tokenAddress = await tugPairContact.methods
@@ -284,7 +284,7 @@ function ButTugModal(props) {
   
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
-    } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
+    } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
   
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
@@ -369,11 +369,11 @@ function ButTugModal(props) {
 
         priceUpdateData = await connectionEVM.getPriceFeedsUpdateData(priceIds);
         
-      } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
+      } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const priceIds = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
-          "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // GLD/USD price id in testnet
+          "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // GOLD/USD price id in testnet
         ];
 
         priceUpdateData = await connectionEVM.getPriceFeedsUpdateData(priceIds);
@@ -469,7 +469,7 @@ function ButTugModal(props) {
         await tokenContact.methods
           .approve(TUGPAIR_ETH_MSFT, amount * 10 ** 9)
           .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
-      } else if (symbols[0] === 'BTC' && symbols[1] === 'XAU') {
+      } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
     
         const tokenAddress = await tugPairContact.methods
@@ -539,7 +539,7 @@ function ButTugModal(props) {
                     <Col xs={4}>
                       <span onClick={() => { setsideS(1); setDropdownTitle(`${symbols[1]} Side`); }} className="token-val">
                         {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
-                        {symbols[1] === 'XAU' && (
+                        {symbols[1] === 'GOLD' && (
                         <img
                           src={gldLogo}
                           className="me-2 ethr"
@@ -897,7 +897,7 @@ function BuyTugDataTable() {
           token1CurrentPrice = Number(priceSaved.msft)
           token0CurrentPrice = Number(priceSaved.eth)
         } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
-          token1Symbol = 'XAU';
+          token1Symbol = 'GOLD';
           token0Symbol = 'BTC';
 
           sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 0).call();
@@ -1042,7 +1042,7 @@ function BuyTugDataTable() {
               </span>
             </div>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'XAU') {
+        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">

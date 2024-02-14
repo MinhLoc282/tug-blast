@@ -378,7 +378,7 @@ function ClaimProceedDataTable() {
               token1Symbol = 'MSFT';
               token0Symbol = 'ETH';
             } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
-              token1Symbol = 'XAU';
+              token1Symbol = 'GOLD';
               token0Symbol = 'BTC';
             }
 
@@ -530,7 +530,7 @@ function ClaimProceedDataTable() {
 
             </span>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'XAU') {
+        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
           return (
             <span className="tugPairTitle">
               <ul className="tugPUL ms">
