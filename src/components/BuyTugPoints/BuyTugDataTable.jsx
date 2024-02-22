@@ -25,6 +25,7 @@ import { ReactComponent as ETHIcon } from '../../assets/images/eth.svg';
 import { ReactComponent as LoadingIcon } from '../../assets/images/blue-loader.svg';
 import { ReactComponent as SubmittedIcon } from '../../assets/images/submitted.svg';
 
+import { BigNumber } from 'bignumber.js';
 
 import {
   setPositionCount, decreasePending,
@@ -345,7 +346,6 @@ function ButTugModal(props) {
       
       const tugPairContract = new web3.eth.Contract(TUGPAIR_ABI, selectedTugId);
       
-      const myPythContact = new web3.eth.Contract(PYTH_ABI, PYTH_SC);
       const pythEvmContact = new web3.eth.Contract(IPythAbi, PYTH_CONTACT_ADDRESS);
       
       const connectionEVM = new EvmPriceServiceConnection(
@@ -392,9 +392,12 @@ function ButTugModal(props) {
       
       //   console.log('============getPrice==============', getPrice);
 
+      const amountBigNum = new BigNumber(amount);
+      const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+
       await tugPairContract.methods
-        .deposit(Number(amount * 10**9), Number(sideS), priceUpdateData)
-        .send({ from: address, value: updateFee, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
+        .deposit(approvalAmount, Number(sideS), priceUpdateData)
+        .send({ from: address, value: updateFee});
 
       dispatch(decreasePending());
       setHash('');
@@ -455,9 +458,12 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
+        const amountBigNum = new BigNumber(amount);
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, amount * 10 ** 9)
-          .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
+          .approve(TUGPAIR_ETH_BTC, approvalAmount)
+          .send({ from: address});
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
     
@@ -468,9 +474,12 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
+        const amountBigNum = new BigNumber(amount);
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, amount * 10 ** 9)
-          .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
+          .approve(TUGPAIR_ETH_MSFT, approvalAmount)
+          .send({ from: address});
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
     
@@ -481,9 +490,12 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
 
+        const amountBigNum = new BigNumber(amount);
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, amount * 10 ** 9)
-          .send({ from: address, maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10 });
+          .approve(TUGPAIR_BTC_XAU, approvalAmount)
+          .send({ from: address});
       }
 
       setLoading(false);
@@ -491,6 +503,8 @@ function ButTugModal(props) {
       updateAmount();
     } catch (error) {
       setLoading(false);
+
+      console.log(error);
 
       toast.error(error.message, {
         position: toast.POSITION.TOP_RIGHT,

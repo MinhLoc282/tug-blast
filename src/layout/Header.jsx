@@ -15,15 +15,15 @@ import { useEthers } from '@usedapp/core';
 import whiteLogo from '../assets/images/tug-1.png';
 import { useWeb3Modal } from '@web3modal/wagmi/react'
 import { useDisconnect, useAccount } from 'wagmi';
+import { useWeb3Signer } from '../hooks/ethersHooks';
 
-import web3 from '../ethereum/web3';
 import {
   setAccount,
 } from '../slice/slice';
 
 import { ReactComponent as LoadingIcon } from '../assets/images/white-loader.svg';
 
-const checkingNetwork = async () => {
+const checkingNetwork = async (web3) => {
   const chainId = await web3.eth.getChainId();
   if (chainId !== 168587773) {
     // toast.error('Please connect the polygon mainnet', {
@@ -38,6 +38,7 @@ function Header(props) {
   const dispatch = useDispatch();
   const pending = useSelector((state) => state.counter.pending);
   const { sidebarHandler } = props;
+  const web3 = useWeb3Signer();
 
   const {
     address,
@@ -51,7 +52,7 @@ function Header(props) {
     if (address) {
       localStorage.setItem('walletAddress', address);
       dispatch(setAccount(address));
-      checkingNetwork();
+      checkingNetwork(web3);
     } else if (localStorage.getItem('walletAddress') == null) {
       toast.error('Please connect the wallet!', {
         position: toast.POSITION.TOP_RIGHT,
