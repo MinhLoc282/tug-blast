@@ -234,12 +234,14 @@ function ButTugModal(props) {
   useEffect(() => {
     const getBalance = async () => {
       try {
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
-        const newBalance = await tokenContact.methods.balanceOf(address).call();
-        const balanceToWei = web3.utils.fromWei(newBalance);
-        const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
-  
-        setBalance(roundBalance);
+        if (address) {
+          const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+          const newBalance = await tokenContact.methods.balanceOf(address).call();
+          const balanceToWei = web3.utils.fromWei(newBalance);
+          const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
+    
+          setBalance(roundBalance);
+        }
       } catch (error) {
         console.log(error);
       }

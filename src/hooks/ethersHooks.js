@@ -31,7 +31,7 @@ export function useWeb3Signer({ chainId } = {}) {
     () =>
       walletClient
         ? new Web3(walletClientToSigner(walletClient).provider.provider)
-        : undefined,
+        : new Web3(new Web3.providers.HttpProvider('https://sepolia.blast.io')),
     [walletClient]
   );
 }
