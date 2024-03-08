@@ -279,24 +279,27 @@ function ButTugModal(props) {
     let sharesA;
     let sharesB;
 
+    const numberBigNum = new BigNumber(number || 0);
+    const numberInWei = numberBigNum.times(new BigNumber(10).pow(18));
+
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     }
 
-    setnoOfShares(parseFloat(sideS === 0 ? sharesA : sharesB));
+    setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
   }, [sideS, price, symbols, setnoOfShares, web3]);
 
   useEffect(() => {
@@ -392,8 +395,8 @@ function ButTugModal(props) {
 
       //   console.log('============getPrice==============', getPrice);
 
-      const amountBigNum = new BigNumber(amount);
-      const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+      const amountBigNum = new BigNumber(amount || 0);
+      const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
       await tugPairContract.methods
         .deposit(approvalAmount, Number(sideS), priceUpdateData)
@@ -402,7 +405,7 @@ function ButTugModal(props) {
       dispatch(decreasePending());
       setHash('');
       setLoading(false);
-      setAmount('');
+      setAmount(0);
       setnoOfShares(0);
       setTugModal(false);
       setBuySide(symbols[sideS]);
@@ -459,7 +462,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
           .approve(TUGPAIR_ETH_BTC, approvalAmount)
@@ -475,7 +478,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
           .approve(TUGPAIR_ETH_MSFT, approvalAmount)
@@ -491,7 +494,7 @@ function ButTugModal(props) {
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
+        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
           .approve(TUGPAIR_BTC_XAU, approvalAmount)
@@ -656,7 +659,7 @@ function ButTugModal(props) {
                   <div className="loading-content">
                     <div>Waiting For Confirmation</div>
 
-                    {Number(approvedAmount) ? <div>{`Swapping ${web3.utils.fromWei(amount, 'gwei')} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
+                    {BigNumber(approvedAmount) ? <div>{`Swapping ${parseFloat(amount)} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
 
                     <div>Confirm this transaction in your wallet</div>
                   </div>
@@ -667,7 +670,7 @@ function ButTugModal(props) {
                   <div className="amount-dai select-token">
                     <Row className="w-100">
                       <Col xs={6}>
-                        <p>Amount(gwei)</p>
+                        <p>Amount(ether)</p>
 
                         <input
                           className="buy-amount-input"
@@ -733,7 +736,7 @@ function ButTugModal(props) {
                   </div>
                   <div className="buy-div">
                     <div className="modal-buy-app-buttons">
-                      {Number(approvedAmount) < Number(amount) && (
+                      {BigNumber(approvedAmount) < BigNumber(amount) && (
                       <button
                         type="button"
                         onClick={onApprove}
@@ -742,7 +745,7 @@ function ButTugModal(props) {
                       </button>
                       )}
 
-                      {Number(approvedAmount) >= Number(amount) && (
+                      {BigNumber(approvedAmount) >= BigNumber(amount) && (
                       <button
                         type="button"
                         onClick={SuccessTug}
