@@ -1053,16 +1053,15 @@ function BuyTugDataTable() {
         // set Current Time
         setTime([deltaDays, deltaHrs, deltaMnts, result222]);
 
-        const currentMultiplier = 0;
         const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();
 
         const token0Initialprice = EpochData.token0InitialPrice / 10 ** 26;
         const token1Initialprice = EpochData.token1InitialPrice / 10 ** 26;
 
-        const totalPoolSize = web3.utils.fromWei(EpochData.totalPot.toString(), 'ether');
+        const totalPoolSize = EpochData.totalPot;
 
-        const totalToken0Shares = web3.utils.fromWei(EpochData.token0SharesIssued.toString(), 'ether');
-        const totalToken1Shares = web3.utils.fromWei(EpochData.token1SharesIssued.toString(), 'ether');
+        const totalToken0Shares = EpochData.token0SharesIssued;
+        const totalToken1Shares = EpochData.token1SharesIssued;
 
         // default
         let token1Symbol;
@@ -1119,16 +1118,11 @@ function BuyTugDataTable() {
         let currentPayoffB = 0;
 
         if (pair.type === 'Yield') {
-          const dailyETHYield = 0.04;
-          const daysInTugPeriod = 3;
-          const daysInYear = 365;
-
           // Calculate the daily yield per token for token A
-          const dailyYieldPerTokenA = dailyETHYield * (daysInTugPeriod / daysInYear) * totalPoolSize * 0.8;
+          const dailyYieldPerTokenA = 0.04 * (pair.tugDuration / 86400) * totalPoolSize * 0.79;
 
-          currentPayoffA = (dailyYieldPerTokenA / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0))) * currentMultiplier || 0;
-
-          currentPayoffB = (dailyYieldPerTokenA / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1))) * currentMultiplier || 0;
+          currentPayoffA = (dailyYieldPerTokenA / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0))) * curMultiplier || 0;
+          currentPayoffB = (dailyYieldPerTokenA / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1))) * curMultiplier || 0;
         } else {
           currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
             / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
@@ -1167,12 +1161,12 @@ function BuyTugDataTable() {
             TOKEN1currentPrice,
             totalToken0Shares,
             totalToken1Shares,
-            totalPoolSize,
+            totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'gwei'),
             no: index + 1,
             type: pair.type,
             id: pair.id,
             timeToExpiry,
-            currentMultiplier,
+            currentMultiplier: curMultiplier,
             tokenAprice,
             tokenBprice,
             priceSynthA: ((parseFloat(pair.totalToken0Deposits)
@@ -1346,7 +1340,7 @@ function BuyTugDataTable() {
       sortable: true,
     },
     {
-      name: 'Total Pool Size (WETH)',
+      name: 'WETH Total Pool Size (in gwei)',
       selector: (row) => `${row.totalPoolSize}`,
       sortable: true,
 

@@ -183,7 +183,7 @@ function ButTugModal(props) {
 
   // setApprove(true)
 
-  const updateAmount = async () => {
+  const updateAmount = useCallback(async () => {
     try {
       let apAmount;
 
@@ -193,7 +193,6 @@ function ButTugModal(props) {
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
@@ -204,7 +203,6 @@ function ButTugModal(props) {
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
@@ -215,12 +213,12 @@ function ButTugModal(props) {
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       }
+
       setApprovedAmount(apAmount);
     } catch (e) {
       toast.error(e, {
@@ -228,7 +226,7 @@ function ButTugModal(props) {
         autoClose: 2000,
       });
     }
-  };
+  }, [web3, symbols, address, selectedTugId, setApprovedAmount]);
 
   const getBalance = async () => {
     try {
@@ -247,21 +245,24 @@ function ButTugModal(props) {
 
   useEffect(() => {
     updateAmount();
-  }, [address, selectedTugId]);
+  }, [address, selectedTugId, updateAmount]);
 
-  const getShares = async () => {
+  const getShares = useCallback(async (number) => {
     // return;
-    if (amount === 0) {
+    if (number === 0) {
       setnoOfShares('0');
       return;
     }
-    if (amount === undefined || amount === null) { return; }
+    if (number === undefined || number === null) { return; }
     if (sideS < 0) {
       return;
     }
     if (!price.btc || !price.eth) {
       return;
     }
+    // if (!price.msft || !price.xau) {
+    //   return;
+    // }
 
     setnoOfShares('fetching shares...');
 
@@ -271,56 +272,26 @@ function ButTugModal(props) {
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        0,
-        Math.trunc(price.btc),
-        Math.trunc(price.eth),
-      ).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        1,
-        Math.trunc(price.btc),
-        Math.trunc(price.eth),
-      ).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        0,
-        Math.round(price.bnb),
-        Math.round(price.matic),
-      ).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        1,
-        Math.round(price.bnb),
-        Math.round(price.matic),
-      ).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        0,
-        Math.trunc(price.btc),
-        Math.trunc(price.gld),
-      ).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(
-        Number(amount),
-        1,
-        Math.trunc(price.btc),
-        Math.trunc(price.gld),
-      ).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? sharesA : sharesB));
-  };
+  }, [sideS, price, symbols, setnoOfShares, web3]);
 
   useEffect(() => {
     getShares(amount);
-  }, [sideS]);
+  }, [sideS, amount, getShares]);
 
   const debounceFun = _.debounce(() => {
     getShares();
@@ -793,9 +764,11 @@ function PositionDataTable() {
       const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
         FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
 
-      let totalData = [];
+      let totalData = await pairsArry.reduce(async (accumulatorPromise, pair, index) => {
+        const accumulator = await accumulatorPromise;
 
-      const promises = pairsArry.map(async (pair, index) => {
+        await new Promise(resolve => setTimeout(resolve, 300));
+
         // setting time and payoff
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
         let startTime = pair.startTime;
@@ -831,33 +804,33 @@ function PositionDataTable() {
         const token0Initialprice = EpochData.token0InitialPrice / 10 ** 8;
         const token1Initialprice = EpochData.token1InitialPrice / 10 ** 8;
 
-        const totalPoolSize = web3.utils.fromWei(EpochData.totalPot.toString(), 'ether');
-        const totalToken0Shares = web3.utils.fromWei(EpochData.token0SharesIssued.toString(), 'ether');
-        const totalToken1Shares = web3.utils.fromWei(EpochData.token1SharesIssued.toString(), 'ether');
+        const totalPoolSize = EpochData.totalPot;
+
+        const totalToken0Shares = EpochData.token0SharesIssued;
+        const totalToken1Shares = EpochData.token1SharesIssued;
 
         // ------------testing version
         const sharedData = await tugPairContact
           .methods.getSharesBalance(currentEpoch, address).call();
-        let token0SharesHeld = web3.utils.fromWei(sharedData.token0Shares.toString(), 'ether');
-        let token1SharesHeld = web3.utils.fromWei(sharedData.token1Shares.toString(), 'ether');
+        let token0SharesHeld = sharedData.token0Shares;
+        let token1SharesHeld = sharedData.token1Shares;
         if (address == null || address === undefined) {
           token0SharesHeld = 0;
           token1SharesHeld = 0;
         }
 
-        const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'ether');
-        const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'ether');
+        const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'gwei');
+        const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'gwei');
 
         // John this is the right one
-        const currentPayoffAWin = (((parseFloat(totalPoolSize) * (0.79))
+        const currentPayoffAWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
         / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
-        const currentPayoffBWin = (((parseFloat(totalPoolSize) * (0.79))
+        const currentPayoffBWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
         / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
-        const currentPayoffALose = (((parseFloat(totalPoolSize) * (0.2))
+        const currentPayoffALose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
         / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
-        const currentPayoffBLose = (((parseFloat(totalPoolSize) * (0.2))
+        const currentPayoffBLose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
         / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
-
         //-------------
         // default
         let token1Symbol;
@@ -902,21 +875,21 @@ function PositionDataTable() {
         / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
         const tokenBDeposit = 100 - tokenADeposit;
 
-        totalData = [...totalData, {
+        accumulator.push({
           checkTotal: 0,
           token0SharesHeld,
           token1SharesHeld,
           token0CostBasis,
           token1CostBasis,
-          currentPayoffAWin,
-          currentPayoffALose,
-          currentPayoffBWin,
-          currentPayoffBLose,
+          currentPayoffAWin: parseFloat(web3.utils.fromWei(currentPayoffAWin.toString(), 'gwei')),
+          currentPayoffALose: parseFloat(web3.utils.fromWei(currentPayoffALose.toString(), 'gwei')),
+          currentPayoffBWin: parseFloat(web3.utils.fromWei(currentPayoffBWin.toString(), 'gwei')),
+          currentPayoffBLose: parseFloat(web3.utils.fromWei(currentPayoffBLose.toString(), 'gwei')),
           TOKEN0currentPrice,
           TOKEN1currentPrice,
           totalToken0Shares,
           totalToken1Shares,
-          totalPoolSize,
+          totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'gwei'),
           no: index + 1,
           type: pair.type,
           id: pair.id,
@@ -928,10 +901,10 @@ function PositionDataTable() {
           token1Symbol,
           tokenADeposit,
           tokenBDeposit,
-        }];
-      });
+        });
 
-      await Promise.all(promises);
+        return accumulator;
+      }, Promise.resolve([]));
 
       const pairsArry2 = result2;
 
@@ -1022,7 +995,7 @@ function PositionDataTable() {
       setBuyTugData(totalData);
       setLoading(false);
     } catch (error) {
-      toast.error(error.message, {
+      toast.error(error, {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 5000,
       });
@@ -1160,7 +1133,7 @@ function PositionDataTable() {
       sortable: true,
     },
     {
-      name: 'Cost Basis(WETH)',
+      name: 'WETH Cost Basis (in gwei)',
       sortable: true,
       selector: (row) => row.totalCostBasis,
       cell: (row) => {
