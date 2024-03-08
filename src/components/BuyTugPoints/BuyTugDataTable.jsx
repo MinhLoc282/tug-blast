@@ -285,18 +285,18 @@ function ButTugModal(props) {
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
