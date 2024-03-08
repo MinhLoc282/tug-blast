@@ -812,6 +812,42 @@ function BuyTugDataTable() {
     return () => clearInterval(timerId);
   });
 
+  const fetchPriceData = async () => {
+    // =============== getPrice start ==============
+
+    const connection = new Connection(CONNECTION);
+    const pythPublicKey = new PublicKey(PUBLIC_KEY);
+    const pythClient = new PythHttpClient(connection, pythPublicKey);
+    const data = await pythClient.getData();
+
+    const priceSaved = {};
+    data.symbols.forEach((symbol) => {
+      const priceRes = data.productPrice.get(symbol);
+      if (priceRes.price) {
+        switch (symbol) {
+          case 'Crypto.ETH/USD':
+            priceSaved.eth = priceRes.price;
+            break;
+          case 'Crypto.BTC/USD':
+            priceSaved.btc = priceRes.price;
+            break;
+          case 'Equity.US.MSFT/USD':
+            priceSaved.msft = priceRes.price;
+            break;
+          case 'Metal.XAU/USD':
+            priceSaved.xau = priceRes.price;
+            break;
+          default:
+            break;
+        }
+      }
+    });
+
+    setPrice(priceSaved);
+
+    return priceSaved;
+  };
+
   const main = useCallback(async () => {
     if (loading) {
       return;
@@ -820,40 +856,7 @@ function BuyTugDataTable() {
     try {
       setLoading(true);
 
-      // =============== getPrice start ==============
-
-      const connection = new Connection(CONNECTION);
-      const pythPublicKey = new PublicKey(PUBLIC_KEY);
-
-      const pythClient = new PythHttpClient(connection, pythPublicKey);
-      const data = await pythClient.getData();
-
-      const priceSaved = {};
-
-      data.symbols.forEach((symbol) => {
-        const priceRes = data.productPrice.get(symbol);
-
-        if (priceRes.price) {
-          switch (symbol) {
-            case 'Crypto.ETH/USD':
-              priceSaved.eth = priceRes.price;
-              break;
-            case 'Crypto.BTC/USD':
-              priceSaved.btc = priceRes.price;
-              break;
-            case 'Equity.US.MSFT/USD':
-              priceSaved.msft = priceRes.price;
-              break;
-            case 'Metal.XAU/USD':
-              priceSaved.xau = priceRes.price;
-              break;
-            default:
-              break;
-          }
-        }
-      });
-
-      setPrice(priceSaved);
+      const priceSaved = await fetchPriceData();
 
       // =============== getPrice end ==============
 
@@ -1016,6 +1019,8 @@ function BuyTugDataTable() {
 
       const totalData = await pairsArry.reduce(async (accumulatorPromise, pair, index) => {
         const accumulator = await accumulatorPromise;
+
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
         let startTime = pair.startTime;
