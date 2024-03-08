@@ -1020,7 +1020,7 @@ function BuyTugDataTable() {
       const totalData = await pairsArry.reduce(async (accumulatorPromise, pair, index) => {
         const accumulator = await accumulatorPromise;
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
         let startTime = pair.startTime;
