@@ -781,7 +781,7 @@ function BuyTugDataTable() {
   const [loading, setLoading] = React.useState(false);
   const [buyTugData, setBuyTugData] = React.useState();
   const [selectedTugId, setSelectedTugId] = useState();
-  const [curMultiplier, setCurMultiplier] = useState();
+  const [curMultiplier, setCurMultiplier] = useState(0);
   const [tugDur, setTugDur] = useState();
   const [price, setPrice] = useState();
   const [[dys, hrs, mins, secs], setTime] = useState([3, 0, 0, 0]);
@@ -802,7 +802,10 @@ function BuyTugDataTable() {
     const curExpTime = (((dys * 24 + hrs) * 60 + mins) * 60 + secs);
     const cmp = (curExpTime / tugDur) * 2;
 
-    setCurMultiplier(cmp);
+    const threshold = 0.001;
+    if (Math.abs(cmp - curMultiplier) >= threshold) {
+        setCurMultiplier(cmp);
+    }
   };
 
   useEffect(() => {
@@ -847,6 +850,15 @@ function BuyTugDataTable() {
     return priceSaved;
   };
 
+  const calculateCurrentPayoffs = (totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, curMultiplier) => {
+    const dailyYieldPerTokenA = 0.04 * (tugDur / 86400) * totalPoolSize * 0.79;
+
+    const currentPayoffA = (dailyYieldPerTokenA / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0))) * curMultiplier || 0;
+    const currentPayoffB = (dailyYieldPerTokenA / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1))) * curMultiplier || 0;
+
+    return { currentPayoffA, currentPayoffB };
+  };
+
   const main = useCallback(async () => {
     if (loading) {
       return;
@@ -864,157 +876,6 @@ function BuyTugDataTable() {
       // let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]]
       const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
         FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
-
-      // const promises = pairsArry.map(async (pair, index) => {
-      //   const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
-      //   let startTime = await tugPairContact.methods.startTime().call();
-      //   startTime = Math.round(startTime);
-
-      //   let tugDuration = await tugPairContact.methods.epochDuration().call();
-      //   tugDuration = Math.round(tugDuration);
-
-      //   setTugDur(tugDuration);
-
-      //   const currentTimeinEpochSeconds = Math.round(Date.now() / 1000);
-
-      //   const currentEpoch = await tugPairContact.methods.currentEpoch().call();
-
-      //   let result222 = tugDuration - ((currentTimeinEpochSeconds - startTime) % tugDuration);
-
-      //   const days = Math.floor(result222 / (3600 * 24));
-      //   const deltaDays = Math.floor(result222 / (3600 * 24)) % (tugDuration / 3600 / 24);
-
-      //   result222 -= days * 3600 * 24;
-
-      //   const deltaHrs = Math.floor(result222 / 3600);
-
-      //   result222 -= deltaHrs * 3600;
-
-      //   const deltaMnts = Math.floor(result222 / 60);
-
-      //   result222 -= deltaMnts * 60;
-
-      //   const timeToExpiry = `${deltaDays}d:${deltaHrs}h:${deltaMnts}m:${result222}s`; // 10/29/2013
-      //   // set Current Time
-      //   setTime([deltaDays, deltaHrs, deltaMnts, result222]);
-
-      //   const currentMultiplier = 0;
-      //   const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();
-
-      //   const token0Initialprice = EpochData.token0InitialPrice / 10 ** 26;
-      //   const token1Initialprice = EpochData.token1InitialPrice / 10 ** 26;
-
-      //   const totalPoolSize = web3.utils.fromWei(EpochData.totalPot.toString(), 'ether');
-
-      //   const totalToken0Shares = web3.utils.fromWei(EpochData.token0SharesIssued.toString(), 'ether');
-      //   const totalToken1Shares = web3.utils.fromWei(EpochData.token1SharesIssued.toString(), 'ether');
-
-      //   // default
-      //   let token1Symbol;
-      //   let token0Symbol;
-
-      //   const token1SymbolRes = await tokenRegistryContact
-      //     .methods.getSymbol(pair.token1Index).call();
-      //   const token0SymbolRes = await tokenRegistryContact
-      //     .methods.getSymbol(pair.token0Index).call();
-
-      //   // QtyOfShareToIssue
-      //   let sharesForOneDai0;
-      //   let sharesForOneDai1;
-
-      //   let token1CurrentPrice;
-      //   let token0CurrentPrice;
-
-      //   if (token1SymbolRes === 'Crypto.BTC/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
-      //     token1Symbol = 'BTC';
-      //     token0Symbol = 'ETH';
-
-      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
-      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
-
-      //     token1CurrentPrice = Number(priceSaved.btc);
-      //     token0CurrentPrice = Number(priceSaved.eth);
-      //   } else if (token1SymbolRes === 'Equity.US.MSFT/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
-      //     token1Symbol = 'MSFT';
-      //     token0Symbol = 'ETH';
-
-      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
-      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
-
-      //     token1CurrentPrice = Number(priceSaved.msft);
-      //     token0CurrentPrice = Number(priceSaved.eth);
-      //   } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
-      //     token1Symbol = 'GOLD';
-      //     token0Symbol = 'BTC';
-
-      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
-      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
-
-      //     token1CurrentPrice = Number(priceSaved.xau);
-      //     token0CurrentPrice = Number(priceSaved.btc);
-      //   }
-
-      //   const TOKEN1currentPrice = token1CurrentPrice / 10 ** 8;
-      //   const TOKEN0currentPrice = token0CurrentPrice / 10 ** 8;
-
-      //   const tokenAprice = ((TOKEN0currentPrice - token0Initialprice) / token0Initialprice) * 100;
-      //   const tokenBprice = ((TOKEN1currentPrice - token1Initialprice) / token1Initialprice) * 100;
-      //   const currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
-      //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
-      //   * parseFloat(sharesForOneDai0)) || 0;
-
-      //   const currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
-      //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
-      //   * parseFloat(sharesForOneDai1)) || 0;
-
-      //   let tokenADeposit = (parseFloat(totalToken0Shares)
-      //   / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
-      //   let tokenBDeposit = (parseFloat(totalToken1Shares)
-      //   / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
-
-      //   if (totalToken0Shares === '0') {
-      //     tokenADeposit = 0;
-      //   } else {
-      //     tokenADeposit = tokenADeposit.toFixed(2);
-      //   }
-      //   if (totalToken1Shares === '0') {
-      //     tokenBDeposit = 0;
-      //   } else {
-      //     tokenBDeposit = tokenBDeposit.toFixed(2);
-      //   }
-
-      //   const btnFlag = false;
-
-      //   const colorFlag = parseFloat(tokenAprice) >= parseFloat(tokenBprice);
-      //   return {
-      //     currentPayoffA,
-      //     currentPayoffB,
-      //     TOKEN0currentPrice,
-      //     TOKEN1currentPrice,
-      //     totalToken0Shares,
-      //     totalToken1Shares,
-      //     totalPoolSize,
-      //     no: index + 1,
-      //     type: pair.type,
-      //     id: pair.id,
-      //     timeToExpiry,
-      //     currentMultiplier,
-      //     tokenAprice,
-      //     tokenBprice,
-      //     priceSynthA: ((parseFloat(pair.totalToken0Deposits)
-      //     / parseFloat(pair.totalDeposits)) * 100),
-      //     priceSynthB: ((parseFloat(pair.totalToken1Deposits)
-      //     / parseFloat(pair.totalDeposits)) * 100),
-      //     token0Symbol,
-      //     token1Symbol,
-      //     tokenADeposit,
-      //     tokenBDeposit,
-      //     btnFlag,
-      //     colorFlag,
-      //   };
-      // });
-
-      // const totalData = await Promise.all(promises);
 
       const totalData = await pairsArry.reduce(async (accumulatorPromise, pair, index) => {
         const accumulator = await accumulatorPromise;
@@ -1118,11 +979,9 @@ function BuyTugDataTable() {
         let currentPayoffB = 0;
 
         if (pair.type === 'Yield') {
-          // Calculate the daily yield per token for token A
-          const dailyYieldPerTokenA = 0.04 * (pair.tugDuration / 86400) * totalPoolSize * 0.79;
-
-          currentPayoffA = (dailyYieldPerTokenA / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0))) * curMultiplier || 0;
-          currentPayoffB = (dailyYieldPerTokenA / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1))) * curMultiplier || 0;
+          const payoffs = calculateCurrentPayoffs(totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, curMultiplier);
+          currentPayoffA = payoffs.currentPayoffA;
+          currentPayoffB = payoffs.currentPayoffB;
         } else {
           currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
             / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
@@ -1166,7 +1025,7 @@ function BuyTugDataTable() {
             type: pair.type,
             id: pair.id,
             timeToExpiry,
-            currentMultiplier: curMultiplier,
+            currentMultiplier: curMultiplier || 0,
             tokenAprice,
             tokenBprice,
             priceSynthA: ((parseFloat(pair.totalToken0Deposits)
@@ -1177,6 +1036,8 @@ function BuyTugDataTable() {
             token1Symbol,
             tokenADeposit,
             tokenBDeposit,
+            sharesForOneDai0,
+            sharesForOneDai1,
             btnFlag,
             colorFlag,
         });
@@ -1203,6 +1064,39 @@ function BuyTugDataTable() {
   }, [web3]);
 
   const debouncedMain = useCallback(debounce(main, 1000), [main]);
+
+  useEffect(() => {
+    const delayedUpdate = debounce(() => {
+        if (curMultiplier && buyTugData && tugDur) {
+            const updatedData = buyTugData.map(item => {
+                const totalPoolBigNum = new BigNumber(item.totalPoolSize);
+                const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
+                const payoffs = calculateCurrentPayoffs(
+                    totalPoolSize,
+                    item.totalToken0Shares,
+                    item.sharesForOneDai0,
+                    item.totalToken1Shares,
+                    item.sharesForOneDai1,
+                    curMultiplier
+                );
+
+                return {
+                    ...item,
+                    currentPayoffA: payoffs.currentPayoffA,
+                    currentPayoffB: payoffs.currentPayoffB
+                };
+            });
+            setBuyTugData(updatedData);
+        }
+    }, 1000);
+
+    delayedUpdate();
+
+    return () => {
+        delayedUpdate.cancel();
+    };
+  }, [curMultiplier, tugDur]);
+
 
   useEffect(() => {
     if (
