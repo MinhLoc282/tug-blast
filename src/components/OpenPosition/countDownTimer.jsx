@@ -15,7 +15,7 @@ export function CountDownTimer({ minSecs }) {
     }
   };
 
-  const reset = () => setTime([parseInt(minutes), parseInt(seconds)]);
+  const reset = () => setTime([parseInt(minutes, 10), parseInt(seconds, 10)]);
 
   React.useEffect(() => {
     const timerId = setInterval(() => tick(), 1000);

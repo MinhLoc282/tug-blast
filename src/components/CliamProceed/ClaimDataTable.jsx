@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DataTable from 'react-data-table-component';
@@ -10,47 +10,44 @@ import {
   Container,
   Modal,
 } from 'react-bootstrap';
-import { useEthers } from '@usedapp/core';
-import Web3 from 'web3';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import debounce from 'lodash/debounce';
+import IPythAbi from '@pythnetwork/pyth-sdk-solidity/abis/IPyth.json';
+import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
+import { useAccount } from 'wagmi';
 import { ReactComponent as BTCIcon } from '../../assets/images/btc.svg';
-import { ReactComponent as BNBIcon } from '../../assets/images/bnb.svg';
 import { ReactComponent as ETHIcon } from '../../assets/images/eth.svg';
-import maticLogo from '../../assets/images/matic.png';
 import msftLogo from '../../assets/images/microsoft.png';
 import gldLogo from '../../assets/images/gld.png';
 
 import { FAKE_DATA } from '../../backend/fakeApi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
-import { PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../../constant';
+import {
+  PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC,
+} from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
-import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
 import { useWeb3Signer } from '../../hooks/ethersHooks';
-
-import { useAccount } from 'wagmi';
 
 const getSuccessData = async (totaldata) => {
   try {
-    let maShares = 0;
-    let saShares = 0;
-    let etShares = 0;
-    let btShares = 0;
-    let msPOff = 0;
+    let ethbShares = 0;
+    let ebtcShares = 0;
+    let btcgShares = 0;
+    let bgoldShares = 0;
     let ebPOff = 0;
+    let bgPOff = 0;
     let totalPayOff = 0;
 
-    for (let i = 0; i < totaldata.length; i++) {
+    for (let i = 0; i < totaldata.length; i += 1) {
       if (totaldata[i].checkTotal === 0 && totaldata[i].myPayOff !== '' && totaldata[i].status === 'Not Claimed') {
-        if (totaldata[i].token0Symbol === 'ETH' && totaldata[i].token1Symbol === 'ONUS') {
-          maShares += parseInt(totaldata[i].token0SharesHeld);
-          saShares += parseInt(totaldata[i].token1SharesHeld);
-          msPOff += parseInt(totaldata[i].myPayOff);
-        } else if (totaldata[i].token0Symbol === 'BTC' && totaldata[i].token1Symbol === 'ETH') {
-          etShares += parseInt(totaldata[i].token0SharesHeld);
-          btShares += parseInt(totaldata[i].token1SharesHeld);
-          ebPOff += parseInt(totaldata[i].myPayOff);
+        if (totaldata[i].token0Symbol === 'ETH' && totaldata[i].token1Symbol === 'BTC') {
+          ethbShares += parseFloat(totaldata[i].token0SharesHeld);
+          ebtcShares += parseFloat(totaldata[i].token1SharesHeld);
+          ebPOff += parseFloat(totaldata[i].myPayOff);
+        } else if (totaldata[i].token0Symbol === 'BTC' && totaldata[i].token1Symbol === 'GOLD') {
+          btcgShares += parseFloat(totaldata[i].token0SharesHeld);
+          bgoldShares += parseFloat(totaldata[i].token1SharesHeld);
+          bgPOff += parseFloat(totaldata[i].myPayOff);
         }
       }
 
@@ -60,7 +57,7 @@ const getSuccessData = async (totaldata) => {
     }
 
     const tData = {
-      maShares, saShares, msPOff, etShares, btShares, ebPOff, totalPayOff,
+      ethbShares, ebtcShares, ebPOff, btcgShares, bgoldShares, bgPOff, totalPayOff,
     };
     return tData;
   } catch (e) {
@@ -69,11 +66,14 @@ const getSuccessData = async (totaldata) => {
       autoClose: 2000,
     });
   }
+
+  return null;
 };
 
 function TugClaimSuccesModal(props) {
   const {
-    show, onHide, maticshare, sandshare, mspayoff, ethshare, btcshare, ebpayoff, totalclaimpayoff, setPageLoad,
+    show, onHide, btcgshare, bgoldshare,
+    bgpayoff, ethbshare, ebtcshare, ebpayoff, totalclaimpayoff, setPageLoad,
   } = props;
 
   return (
@@ -103,22 +103,22 @@ function TugClaimSuccesModal(props) {
       <Modal.Body className="p-0">
         <div className="amount-dai select-token">
           <small className="per-dair d-block w-100">
-            You have cliamed
+            You have claimed
             {' '}
             <span className="climsml">
               <br />
-              {maticshare}
+              {ethbshare}
               {' '}
-              synth ETH tokens &
+              ETH shares &
               {' '}
-              {sandshare}
+              {ebtcshare}
               {' '}
-              synth ONUS tokens
+              BTC shares
             </span>
             <br />
             {' for '}
             <span className="smal-blu">
-              {mspayoff}
+              {ebpayoff}
               {' '}
               WETH
             </span>
@@ -126,22 +126,22 @@ function TugClaimSuccesModal(props) {
         </div>
         <div className="amount-dai select-token">
           <small className="per-dair d-block w-100">
-            You have cliamed
+            You have claimed
             {' '}
             <span className="climsml">
               <br />
-              {ethshare}
+              {btcgshare}
               {' '}
-              synth ETH tokens &
+              BTC shares &
               {' '}
-              {btcshare}
+              {bgoldshare}
               {' '}
-              synth BTC tokens
+              GOLD shares
             </span>
             <br />
             {' for '}
             <span className="smal-blu">
-              {ebpayoff}
+              {bgpayoff}
               {' '}
               WETH
             </span>
@@ -181,16 +181,6 @@ function TugClaimSuccesModal(props) {
           </Button>
         </div>
       </Modal.Body>
-      <Modal.Footer className="text-start justify-content-sm-start ps-5">
-
-        <Link
-          to="/openposition"
-        >
-          <small className="per-dair d-block w-100">
-            Click here to check your position
-          </small>
-        </Link>
-      </Modal.Footer>
     </Modal>
   );
 }
@@ -198,7 +188,7 @@ function TugClaimSuccesModal(props) {
 const claimAll = async (claimList, account, web3) => {
   try {
     let checkEmpty = true;
-    for (let i = 0; i < claimList.length; i++) {
+    for (let i = 0; i < claimList.length; i += 1) {
       if (claimList[i].epochNumber.length !== 0) {
         checkEmpty = false;
       }
@@ -213,13 +203,15 @@ const claimAll = async (claimList, account, web3) => {
 
     const pythEvmContact = new web3.eth.Contract(IPythAbi, PYTH_CONTACT_ADDRESS);
     const connectionEVM = new EvmPriceServiceConnection(
-      "https://hermes.pyth.network"
+      'https://hermes.pyth.network',
     ); // See Price Service endpoints section below for other endpoints
 
     // // ETH - MSFT
     // const priceIds2 = [
-    //   '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
-    //   "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MATIC/USD price id in testnet
+    //   '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+    // BNB/USD price id in testnet
+    //   "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1",
+    // MATIC/USD price id in testnet
     // ];
 
     // // ETH - MSFT
@@ -230,39 +222,41 @@ const claimAll = async (claimList, account, web3) => {
     // .getUpdateFee(priceUpdateData2)
     // .call();
 
-    for (let i = 0; i < claimList.length; i++) {
-      if (claimList[i].pairId === TUGPAIR_ETH_BTC && claimList[i].epochNumber.length !== 0) {
+    const promises = claimList.map(async (claim) => {
+      if (claim.pairId === TUGPAIR_ETH_BTC && claim.epochNumber.length !== 0) {
         const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
 
-        // BTC - ETH
+        // ETH - BTC
         const priceIds1 = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
-          "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
+          '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // ETH/USD price id in testnet
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
         ];
-        
-        // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
-        // chain. `getPriceFeedsUpdateData` creates the update data which can be submitted to your contract. Then your contract should
+
+        // In order to use Pyth prices in your protocol you need to
+        // submit the price update data to Pyth contract in your target
+        // chain. `getPriceFeedsUpdateData` creates the update data
+        // which can be submitted to your contract. Then your contract should
         // call the Pyth Contract with this data.
-        
-        // BTC - ETH
+
+        // ETH - BTC
         const priceUpdateData1 = await connectionEVM.getPriceFeedsUpdateData(priceIds1);
-        
-        // BTC - ETH
+
+        // ETH - BTC
         const updateFee1 = await pythEvmContact.methods
-        .getUpdateFee(priceUpdateData1)
-        .call();
+          .getUpdateFee(priceUpdateData1)
+          .call();
 
         await ContractTugPair.methods
-          .collectWinnings(claimList[i].epochNumber, priceUpdateData1)
+          .collectWinnings(claim.epochNumber, priceUpdateData1)
           .send({
             from: account,
             value: updateFee1,
-            maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
           });
-
-      } 
-      // else if (claimList[i].pairId === TUGPAIR_ETH_MSFT && claimList[i].epochNumber.length !== 0) {
+      // eslint-disable-next-line brace-style
+      }
+      // else if (claimList[i].pairId === TUGPAIR_ETH_MSFT
+      // && claimList[i].epochNumber.length !== 0) {
       //   const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
       //   await ContractTugPair.methods
       //     .collectWinnings(claimList[i].epochNumber, priceUpdateData2)
@@ -271,44 +265,44 @@ const claimAll = async (claimList, account, web3) => {
       //       value: updateFee2,
       //       maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
       //     });
-      // } 
-      else if (claimList[i].pairId === TUGPAIR_BTC_XAU && claimList[i].epochNumber.length !== 0) {
+      // }
+      else if (claim.pairId === TUGPAIR_BTC_XAU && claim.epochNumber.length !== 0) {
         const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
         // BTC - XAU
         const priceIds3 = [
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
-          "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // GOLD/USD price id in testnet
+          '0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2', // GOLD/USD price id in testnet
         ];
 
-        // ETH - MSFT
+        // BTC - XAU
         const priceUpdateData3 = await connectionEVM.getPriceFeedsUpdateData(priceIds3);
 
-        // ETH - MSFT
+        // BTC - XAU
         const updateFee3 = await pythEvmContact.methods
-        .getUpdateFee(priceUpdateData3)
-        .call();
+          .getUpdateFee(priceUpdateData3)
+          .call();
 
         await ContractTugPair.methods
-          .collectWinnings(claimList[i].epochNumber, priceUpdateData3)
+          .collectWinnings(claim.epochNumber, priceUpdateData3)
           .send({
             from: account,
             value: updateFee3,
-            maxPriorityFeePerGas: 10 ** 10, maxFeePerGas: 10 ** 10,
           });
       }
-    }
+    });
+
+    await Promise.all(promises);
+
     toast.success('Success!', {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
     });
     // show success modal
-    return true;
   } catch (e) {
     toast.error('Operation failed', {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
     });
-    return false;
   }
 };
 
@@ -325,25 +319,33 @@ function ClaimProceedDataTable() {
   const [buyTugData, setBuyTugData] = React.useState();
   const [sucdata, setSucdata] = React.useState();
   const [loading, setLoading] = React.useState();
-  const [maticshare, setMaticshare] = React.useState(0);
-  const [sandshare, setSandshare] = React.useState(0);
-  const [mspayoff, setMspayoff] = React.useState(0);
-  const [ethshare, setEthshare] = React.useState(0);
-  const [btcshare, setBtcshare] = React.useState(0);
-  const [ebpayoff, setEbpayoff] = React.useState(0);
+  const [ebtcshare, setEBtcshare] = React.useState(0);
+  const [bgoldshare, setBGoldshare] = React.useState(0);
+  const [ebpayoff, setEBpayoff] = React.useState(0);
+  const [ethbshare, setEthBshare] = React.useState(0);
+  const [btcgshare, setBtcGshare] = React.useState(0);
+  const [bgpayoff, setbgpayoff] = React.useState(0);
   const [totalpayoff, setTotalpayoff] = React.useState(0);
   const [totalclaimpayoff, setTotalClaimPayOff] = React.useState(0);
   const [claimdatalist, setClaimdatalist] = React.useState([]);
   const [pageload, setPageLoad] = React.useState(false);
 
-  const main = async () => {
+  const main = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const tokenRegistryContact = new web3.eth.Contract(TOKEN_REGISTRY_ABI, TOKEN_REGISTRY);// tokenRegistryContractObj
+      const tokenRegistryContact = new web3.eth.Contract(
+        TOKEN_REGISTRY_ABI,
+        TOKEN_REGISTRY,
+      );// tokenRegistryContractObj
 
       // tugPairs
-      const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[2]];
+      const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
+        FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
       // get upcollected Epochs
       let totalData = [];
       let totalCostBasis = 0;
@@ -351,24 +353,28 @@ function ClaimProceedDataTable() {
       const claimList = [];
       const totalClaimPO = 0;
 
-      for (let item = 0; item < pairsArry.length; item++) {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pairsArry[item].id);
+      const promises = pairsArry.map(async (pair) => {
+        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
         const currentEpoch = await tugPairContact.methods.currentEpoch().call();
-        
+
         const currentUserEpoch = await tugPairContact.methods.getUserCurrentEpoch(address).call();
-        
+
         // set status
         let status = '';
-        
-        if (Number(currentUserEpoch.latestEpoch) > 0 && Number(currentUserEpoch.latestEpoch) < Number(currentEpoch)) {
-          const resWinning = await tugPairContact.methods.getWinnings(Number(currentUserEpoch.latestEpoch), address).call();
+
+        if (Number(currentUserEpoch.latestEpoch) > 0
+        && Number(currentUserEpoch.latestEpoch) < Number(currentEpoch)) {
+          const resWinning = await tugPairContact
+            .methods.getWinnings(Number(currentUserEpoch.latestEpoch), address).call();
 
           if (Number(resWinning) > 0) {
             status = 'Not Claimed';
 
-            const token1SymbolRes = await tokenRegistryContact.methods.getSymbol(pairsArry[item].token1Index).call();
-            const token0SymbolRes = await tokenRegistryContact.methods.getSymbol(pairsArry[item].token0Index).call();
-            
+            const token1SymbolRes = await tokenRegistryContact
+              .methods.getSymbol(pair.token1Index).call();
+            const token0SymbolRes = await tokenRegistryContact
+              .methods.getSymbol(pair.token0Index).call();
+
             let token1Symbol;
             let token0Symbol;
 
@@ -383,25 +389,35 @@ function ClaimProceedDataTable() {
               token0Symbol = 'BTC';
             }
 
-            claimList.push({ pairId: pairsArry[item].id, epochNumber: [Number(currentUserEpoch.latestEpoch)] });
+            claimList.push({
+              pairId: pair.id,
+              epochNumber: [Number(currentUserEpoch.latestEpoch)],
+            });
 
             const epochNum = currentUserEpoch.latestEpoch;
+            let tugDuration = pair.tugDuration;
+            tugDuration = Math.round(tugDuration);
+
+            const tugEndDate = new Date((pair.startTime + epochNum * tugDuration) * 1000);
 
             // get tokenSaresHeld
-            const sharedData = await tugPairContact.methods.getSharesBalance(epochNum, address).call();
+            const sharedData = await tugPairContact
+              .methods.getSharesBalance(epochNum, address).call();
 
-            const token0SharesHeld = sharedData.token0Shares;
-            const token1SharesHeld = sharedData.token1Shares;
+            const token0SharesHeld = web3.utils.fromWei(sharedData.token0Shares.toString(), 'ether');
+            const token1SharesHeld = web3.utils.fromWei(sharedData.token1Shares.toString(), 'ether');
 
-            const token0CostBasis = currentUserEpoch.totalDepositA;
-            const token1CostBasis = currentUserEpoch.totalDepositB;
+            const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'ether');
+            const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'ether');
 
             // get my payOff
-            const myPayOff = Number(resWinning);
+            const myPayOff = web3.utils.fromWei(resWinning.toString(), 'ether');
 
             const totalItem = {
               checkTotal: 0,
               epochNumber: epochNum,
+              tugEndDate: tugEndDate.toLocaleDateString(),
+              type: pair.type,
               token0SharesHeld,
               token1SharesHeld,
               token0CostBasis,
@@ -413,18 +429,18 @@ function ClaimProceedDataTable() {
             };
 
             totalData.push(totalItem);
-            totalCostBasis += parseInt(token0CostBasis) + parseInt(token1CostBasis);
+            totalCostBasis += parseFloat(token0CostBasis) + parseFloat(token1CostBasis);
             totalCostBasis += 0 + 0;
 
-            totalPayOff += parseInt(myPayOff);
+            totalPayOff += parseFloat(myPayOff);
           }
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       const ttItem = { checkTotal: 1, totalCostBasis, totalPayOff };
       totalData = [...totalData, ttItem];
-      setLoading(false);
-
       const localData = { expiryTime: moment().add(2, 'hours').unix(), claimData: JSON.stringify(totalData) };
       localStorage.setItem('ClaimData', JSON.stringify(localData));
 
@@ -432,12 +448,12 @@ function ClaimProceedDataTable() {
 
       const sData = await getSuccessData(totalData);
 
-      setMaticshare(sData.maShares);
-      setSandshare(sData.saShares);
-      setMspayoff(sData.msPOff);
-      setEthshare(sData.etShares);
-      setBtcshare(sData.btShares);
-      setEbpayoff(sData.ebPOff);
+      setEthBshare(sData.ethbShares);
+      setEBtcshare(sData.ebtcShares);
+      setEBpayoff(sData.ebPOff);
+      setBtcGshare(sData.btcgShares);
+      setBGoldshare(sData.bgoldShares);
+      setbgpayoff(sData.bgPOff);
       setTotalpayoff(sData.totalPayOff);
       setTotalClaimPayOff(totalClaimPO);
       setSucdata(sData);
@@ -447,18 +463,26 @@ function ClaimProceedDataTable() {
       setLoading(false);
     } catch (error) {
       console.log(error);
-      toast.error(error, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 2000,
-      });
+
+      if (error.code === -32007) {
+        toast.error('Request limit reached', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+        });
+      }
     }
-  };
+  }, [web3, address, setLoading, setBuyTugData,
+    setEBtcshare, setBGoldshare, setEBpayoff,
+    setEthBshare, setBtcGshare, setbgpayoff, setTotalpayoff,
+    setTotalClaimPayOff, setSucdata, setClaimdatalist]);
+
+  const debouncedMain = useCallback(debounce(main, 1000), [main]);
   // setApprove(true)
   useEffect(() => {
-    if (address) {
-      main();
+    if (address && web3) {
+      debouncedMain();
     }
-  }, [address, web3]);
+  }, [address, web3, debouncedMain]);
 
   // useEffect(() => {
   //   if (modalShow) {
@@ -468,14 +492,19 @@ function ClaimProceedDataTable() {
 
   useEffect(() => {
     if (pageload) {
-      main();
+      debouncedMain();
     }
-  }, [pageload]);
+  }, [pageload, debouncedMain]);
 
   const columns = [
     {
       name: 'Epoch Number',
       selector: (row) => row.epochNumber,
+      sortable: true,
+    },
+    {
+      name: 'Epoch Number',
+      selector: (row) => row.type,
       sortable: true,
     },
     {
@@ -515,7 +544,7 @@ function ClaimProceedDataTable() {
 
             </span>
           );
-        } else if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
+        } if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
           return (
             <span className="tugPairTitle">
               <ul className="tugPUL ms">
@@ -524,14 +553,14 @@ function ClaimProceedDataTable() {
                   {row.token0Symbol}
                 </li>
                 <li>
-                <img src={msftLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
+                  <img src={msftLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
                   {row.token1Symbol}
                 </li>
               </ul>
 
             </span>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
+        } if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
           return (
             <span className="tugPairTitle">
               <ul className="tugPUL ms">
@@ -540,7 +569,7 @@ function ClaimProceedDataTable() {
                   {row.token0Symbol}
                 </li>
                 <li>
-                <img src={gldLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
+                  <img src={gldLogo} className="iconSvg" style={{ width: '1rem', height: '1rem', borderRadius: '100%' }} alt="" />
                   {row.token1Symbol}
                 </li>
               </ul>
@@ -548,6 +577,8 @@ function ClaimProceedDataTable() {
             </span>
           );
         }
+
+        return null;
       },
     },
     {
@@ -566,11 +597,13 @@ function ClaimProceedDataTable() {
             </ul>
           );
         }
+
+        return null;
       },
       sortable: true,
     },
     {
-      name: 'Cost Basis',
+      name: 'Cost Basis(WETH)',
       sortable: true,
       selector: (row) => row.totalCostBasis,
       cell: (row) => {
@@ -578,35 +611,35 @@ function ClaimProceedDataTable() {
           return (
             <ul className="costBasis">
               <li>
-                {row.token0CostBasis ? `$${row.token0CostBasis}` : '-'}
+                {row.token0CostBasis ? `${row.token0CostBasis}` : '-'}
               </li>
               <li>
-                {row.token1CostBasis ? `$${row.token1CostBasis}` : '-'}
+                {row.token1CostBasis ? `${row.token1CostBasis}` : '-'}
               </li>
             </ul>
           );
         }
         return (
           <p className="totalPairtStyle">
-            {row.totalCostBasis ? `$${row.totalCostBasis}` : '-'}
+            {row.totalCostBasis ? `${row.totalCostBasis}` : '-'}
           </p>
         );
       },
     },
     {
-      name: 'My Payoff',
+      name: 'My Payoff(WETH)',
       selector: (row) => row.myPayOff,
       cell: (row) => {
         if (row.checkTotal === 0) {
           return (
             <p className="">
-              {row.myPayOff ? `$${row.myPayOff}` : '-'}
+              {row.myPayOff ? `${row.myPayOff}` : '-'}
             </p>
           );
         }
         return (
           <p className="">
-            {row.totalPayOff ? `$${row.totalPayOff}` : '-'}
+            {row.totalPayOff ? `${row.totalPayOff}` : '-'}
           </p>
         );
       },
@@ -626,7 +659,9 @@ function ClaimProceedDataTable() {
               </li>
               <li hidden={!row.myPayOff} className="">
                 <span className="">
-                  {(parseInt(row.myPayOff) / (parseInt(row.token0CostBasis) + parseInt(row.token1CostBasis)) * 100).toFixed(2)}
+                  {((parseFloat(row.myPayOff)
+                  / (parseFloat(row.token0CostBasis)
+                  + parseFloat(row.token1CostBasis))) * 100).toFixed(2)}
                   %
                 </span>
               </li>
@@ -638,7 +673,7 @@ function ClaimProceedDataTable() {
             <span hidden={!!row.totalPayOff}>-</span>
             <span className="" hidden={!row.totalPayOff}>
               {' '}
-              {(parseInt(row.totalPayOff) / parseInt(row.totalCostBasis) * 100).toFixed(2)}
+              {((parseFloat(row.totalPayOff) / parseFloat(row.totalCostBasis)) * 100).toFixed(2)}
               %
             </span>
           </p>
@@ -707,6 +742,8 @@ function ClaimProceedDataTable() {
     if (params.node.rowIndex % 2 === 0) {
       return { background: 'red !important' };
     }
+
+    return null;
   };
 
   function FilterComponent() {
@@ -745,7 +782,7 @@ function ClaimProceedDataTable() {
     }
 
     setHideDirector(false);
-  }, []);
+  }, [address]);
 
   return (
     !address ? null
@@ -754,11 +791,11 @@ function ClaimProceedDataTable() {
           <TugClaimSuccesModal
             show={modalShow}
             totaldata={sucdata}
-            maticshare={maticshare}
-            sandshare={sandshare}
-            mspayoff={mspayoff}
-            ethshare={ethshare}
-            btcshare={btcshare}
+            ebtcshare={ebtcshare}
+            bgoldshare={bgoldshare}
+            ethbshare={ethbshare}
+            btcgshare={btcgshare}
+            bgpayoff={bgpayoff}
             ebpayoff={ebpayoff}
             totalpayoff={totalpayoff}
             totalclaimpayoff={totalclaimpayoff}
@@ -779,7 +816,8 @@ function ClaimProceedDataTable() {
             columns={columns}
             data={buyTugData}
             customStyles={customStyles}
-            paginationResetDefaultPage={resetPaginationToggle} // optionally, a hook to reset pagination to page 1
+            paginationResetDefaultPage={resetPaginationToggle}
+            // optionally, a hook to reset pagination to page 1
             subHeader
             subHeaderComponent={subHeaderComponentMemo}
             persistTableHead

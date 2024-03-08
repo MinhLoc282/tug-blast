@@ -123,6 +123,8 @@ export function StakeTugModal(props) {
   );
 }
 export function StakeSuccessModal(props) {
+  const { onHide } = props;
+
   const [tugNFT2, setTugNFT2] = React.useState([
     {
       image: '../assets/1.webp',
@@ -180,7 +182,7 @@ export function StakeSuccessModal(props) {
           </Row>
         </div>
         <div className="buy-div mt-4">
-          <Button className="purple-btn w-100" onClick={props.onHide}>
+          <Button className="purple-btn w-100" onClick={onHide}>
             CLOSE
           </Button>
         </div>

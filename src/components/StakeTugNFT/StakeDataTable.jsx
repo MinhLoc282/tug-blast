@@ -223,7 +223,7 @@ function StakeTugDataTable() {
       || (item.price
         && item.price.toLowerCase().includes(filterText.toLowerCase())),
   );
-  function FilterComponent({ filterText, onFilter, onClear }) {
+  function FilterComponent({ onFilter, onClear }) {
     return (
       <div className="searchmain">
         <div className="Filteritems">
@@ -443,6 +443,7 @@ function StakeTugDataTable() {
     );
   }
   function StakeSuccessModal(props) {
+    const { onHide } = props;
     const [tugNFT2, setTugNFT2] = React.useState([
       {
         image: '../assets/1.webp',
@@ -500,7 +501,7 @@ function StakeTugDataTable() {
             </Row>
           </div>
           <div className="buy-div mt-4">
-            <Button className="purple-btn w-100" onClick={props.onHide}>
+            <Button className="purple-btn w-100" onClick={onHide}>
               CLOSE
             </Button>
           </div>

@@ -25,7 +25,7 @@
     "crypto-browserify": "^3.12.0",
     "customize-cra": "^1.0.0",
     "dotenv": "^16.0.1",
-    "eslint": "^7.32.0",
+    "eslint": "^7.32.0 || ^8.2.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.28.0",
@@ -114,5 +114,9 @@
     "babel-loader": "^9.1.3",
     "webpack": "^4.35.3",
     "webpack-cli": "^3.3.6"
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/MinhLoc282/tug-blast.git",
+  "author": "MinhLoc282 <minhloc2802@gmail.com>",
+  "license": "MIT"
 }

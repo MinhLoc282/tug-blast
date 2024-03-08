@@ -9,7 +9,6 @@ import {
   Button,
   Form,
 } from 'react-bootstrap';
-import { useEthers } from '@usedapp/core';
 // import WalletConnectProvider from '@walletconnect/web3-provider';
 // import Web3Modal from 'web3modal';
 import whiteLogo from '../assets/images/tug-1.png';
@@ -59,7 +58,7 @@ function Header(props) {
         autoClose: 2000,
       });
     }
-  }, [address]);
+  }, [address, web3, dispatch]);
 
   const handleConnect = async () => {
     try {
@@ -119,7 +118,7 @@ function Header(props) {
                 ? (
                   <div className="walletAddressInput">
                     {/* <Form.Control type="text" disabled value={account} onClick={handleClipboard}/> */}
-                    <Form.Control type="text" value={address || ''} onClick={handleClipboard} />
+                    <Form.Control type="text" defaultValue={address || ''} onClick={handleClipboard} />
                   </div>
                 )
                 : (

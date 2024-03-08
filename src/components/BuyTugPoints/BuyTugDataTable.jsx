@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DataTable from 'react-data-table-component';
@@ -14,42 +14,45 @@ import {
   CloseButton,
 } from 'react-bootstrap';
 import _ from 'lodash';
-import Web3 from 'web3';
+import debounce from 'lodash/debounce';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
 import { PythHttpClient } from '@pythnetwork/client';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { BigNumber } from 'bignumber.js';
+import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
+import IPythAbi from '@pythnetwork/pyth-sdk-solidity/abis/IPyth.json';
+import { useAccount } from 'wagmi';
 import { ReactComponent as BTCIcon } from '../../assets/images/btc.svg';
-import { ReactComponent as BNBIcon } from '../../assets/images/bnb.svg';
+// import { ReactComponent as BNBIcon } from '../../assets/images/bnb.svg';
 import { ReactComponent as ETHIcon } from '../../assets/images/eth.svg';
 import { ReactComponent as LoadingIcon } from '../../assets/images/blue-loader.svg';
 import { ReactComponent as SubmittedIcon } from '../../assets/images/submitted.svg';
-
-import { BigNumber } from 'bignumber.js';
 
 import {
   setPositionCount, decreasePending,
 } from '../../slice/slice';
 import { FAKE_DATA } from '../../backend/fakeApi';
 import gldLogo from '../../assets/images/gld.png';
-import maticLogo from '../../assets/images/matic.png';
+// import maticLogo from '../../assets/images/matic.png';
 import msftLogo from '../../assets/images/microsoft.png';
 import tslaLogo from '../../assets/images/tsla.png';
 import dogeLogo from '../../assets/images/doge.png';
-import { CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS, PYTH_SC, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../../constant';
+import {
+  CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS,
+  TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT,
+} from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
-import { PYTH_ABI } from '../../constant/pythAbi';
-import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
-import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
+// import { PYTH_ABI } from '../../constant/pythAbi';
 import { TOKEN_ABI } from '../../constant/tokenAbi';
-import { useAccount } from 'wagmi';
 import { useWeb3Signer } from '../../hooks/ethersHooks';
 
 function TokenSuccessModal(props) {
   const dispatch = useDispatch();
 
-  let positionCount = useSelector((state) => state.counter.positionCount);
+  const positionCount = useSelector((state) => state.counter.positionCount);
 
   const {
     buySide, symbols, setModalShow, show, onHide,
@@ -113,14 +116,16 @@ function TokenSuccessModal(props) {
                 {symbols[0] === 'BTC' && <BTCIcon width="25px" className="me-2 ethr" />}
                 {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
 
-                {symbols[0] === 'TSLA' && <img
+                {symbols[0] === 'TSLA' && (
+                <img
                   src={tslaLogo}
                   className="me-2 ethr"
                   style={{
                     width: '25px', height: '25px', margin: '4px 0', borderRadius: '100%',
                   }}
                   alt=""
-                />}
+                />
+                )}
 
                 {symbols[1] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
 
@@ -156,7 +161,7 @@ function TokenSuccessModal(props) {
         <div className="buy-div">
           <Button
             className="buy-btn close-purple"
-            onClick={() => { setModalShow(false); dispatch(setPositionCount(++positionCount)); }}
+            onClick={() => { setModalShow(false); dispatch(setPositionCount(positionCount + 1)); }}
           >
             CLOSE
           </Button>
@@ -185,40 +190,40 @@ function ButTugModal(props) {
   const dispatch = useDispatch();
   const web3 = useWeb3Signer();
 
-  const updateAmount = async () => {
+  const updateAmount = useCallback(async () => {
     try {
       let apAmount;
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-    
+
         const tokenAddress = await tugPairContact.methods
-            .depositToken()
-            .call();
-    
+          .depositToken()
+          .call();
+
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
-    
+
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-          const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-      
-          const tokenAddress = await tugPairContact.methods
-              .depositToken()
-              .call();
-      
-          const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
-      
-          apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
+        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
+
+        const tokenAddress = await tugPairContact.methods
+          .depositToken()
+          .call();
+
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+
+        apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-          const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-      
-          const tokenAddress = await tugPairContact.methods
-              .depositToken()
-              .call();
-      
-          const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
-      
-          apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
+        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+
+        const tokenAddress = await tugPairContact.methods
+          .depositToken()
+          .call();
+
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+
+        apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       }
 
       setApprovedAmount(apAmount);
@@ -228,9 +233,7 @@ function ButTugModal(props) {
         autoClose: 2000,
       });
     }
-  };
-
-  
+  }, [web3, symbols, address, selectedTugId, setApprovedAmount]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -240,7 +243,7 @@ function ButTugModal(props) {
           const newBalance = await tokenContact.methods.balanceOf(address).call();
           const balanceToWei = web3.utils.fromWei(newBalance);
           const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
-    
+
           setBalance(roundBalance);
         }
       } catch (error) {
@@ -253,12 +256,12 @@ function ButTugModal(props) {
 
   useEffect(() => {
     updateAmount();
-  }, [address, selectedTugId]);
+  }, [address, selectedTugId, updateAmount]);
 
-  const getShares = async (number) => {
+  const getShares = useCallback(async (number) => {
     // return;
     if (number === 0) {
-      setnoOfShares('0')
+      setnoOfShares('0');
       return;
     }
     if (number === undefined || number === null) { return; }
@@ -279,27 +282,27 @@ function ButTugModal(props) {
 
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-  
+
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-  
+
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-  
+
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(Number(number), 1).call();
     }
-    
-    setnoOfShares(parseInt(sideS === 0 ? sharesA : sharesB));
-  };
+
+    setnoOfShares(parseFloat(sideS === 0 ? sharesA : sharesB));
+  }, [sideS, price, symbols, setnoOfShares, web3]);
 
   useEffect(() => {
-    getShares(amount)
-  }, [sideS, amount])
+    getShares(amount);
+  }, [sideS, amount, getShares]);
 
   const debounceFun = _.debounce((number) => {
     getShares(number);
@@ -339,25 +342,25 @@ function ButTugModal(props) {
 
         return;
       }
-      
+
       setLoading(true);
-      
+
       localStorage.setItem('buyAmount', noOfShares);
-      
+
       const tugPairContract = new web3.eth.Contract(TUGPAIR_ABI, selectedTugId);
-      
+
       const pythEvmContact = new web3.eth.Contract(IPythAbi, PYTH_CONTACT_ADDRESS);
-      
+
       const connectionEVM = new EvmPriceServiceConnection(
-        "https://hermes.pyth.network"
+        'https://hermes.pyth.network',
       ); // See Price Service endpoints section below for other endpoints
-        
+
       let priceUpdateData;
-     
+
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
         const priceIds = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
-          "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
+          '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // ETH/USD price id in testnet
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
         ];
 
@@ -366,30 +369,28 @@ function ButTugModal(props) {
         const priceIds = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
           '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // BNB/USD price id in testnet
-          "0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1", // MSFT/USD price id in testnet
+          '0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1', // MSFT/USD price id in testnet
         ];
 
         priceUpdateData = await connectionEVM.getPriceFeedsUpdateData(priceIds);
-        
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const priceIds = [
           // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
-          "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // GOLD/USD price id in testnet
+          '0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2', // GOLD/USD price id in testnet
         ];
 
         priceUpdateData = await connectionEVM.getPriceFeedsUpdateData(priceIds);
-        
       }
-        
+
       const updateFee = await pythEvmContact.methods
-      .getUpdateFee(priceUpdateData)
-      .call();
-      
+        .getUpdateFee(priceUpdateData)
+        .call();
+
       //   const getPrice = await myPythContact.methods
       //   .getPrice(3, priceUpdateData)
       //   .send({ value: updateFee, from: account });
-      
+
       //   console.log('============getPrice==============', getPrice);
 
       const amountBigNum = new BigNumber(amount);
@@ -397,7 +398,7 @@ function ButTugModal(props) {
 
       await tugPairContract.methods
         .deposit(approvalAmount, Number(sideS), priceUpdateData)
-        .send({ from: address, value: updateFee});
+        .send({ from: address, value: updateFee });
 
       dispatch(decreasePending());
       setHash('');
@@ -450,52 +451,52 @@ function ButTugModal(props) {
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-    
+
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          //selectedTugId, amount > 100000 ? amount : 100000
+          // selectedTugId, amount > 100000 ? amount : 100000
 
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
 
         await tokenContact.methods
           .approve(TUGPAIR_ETH_BTC, approvalAmount)
-          .send({ from: address});
+          .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-    
+
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          //selectedTugId, amount > 100000 ? amount : 100000
+          // selectedTugId, amount > 100000 ? amount : 100000
 
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
 
         await tokenContact.methods
           .approve(TUGPAIR_ETH_MSFT, approvalAmount)
-          .send({ from: address});
+          .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-    
+
         const tokenAddress = await tugPairContact.methods
           .depositToken()
           .call();
-          //selectedTugId, amount > 100000 ? amount : 100000
+          // selectedTugId, amount > 100000 ? amount : 100000
 
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress)
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
         const amountBigNum = new BigNumber(amount);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(9));
 
         await tokenContact.methods
           .approve(TUGPAIR_BTC_XAU, approvalAmount)
-          .send({ from: address});
+          .send({ from: address });
       }
 
       setLoading(false);
@@ -536,7 +537,18 @@ function ButTugModal(props) {
                       <h4>Choose a side</h4>
                     </Col>
                     <Col xs={4}>
-                      <span onClick={() => { setsideS(0); setDropdownTitle(`${symbols[0]} Side`); }} className="token-val">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => { setsideS(0); setDropdownTitle(`${symbols[0]} Side`); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setsideS(0);
+                            setDropdownTitle(`${symbols[0]} Side`);
+                          }
+                        }}
+                        className="token-val"
+                      >
                         {symbols[0] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
                         {symbols[0] === 'MSFT' && (
@@ -553,7 +565,18 @@ function ButTugModal(props) {
                       </span>
                     </Col>
                     <Col xs={4}>
-                      <span onClick={() => { setsideS(1); setDropdownTitle(`${symbols[1]} Side`); }} className="token-val">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => { setsideS(1); setDropdownTitle(`${symbols[1]} Side`); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setsideS(1);
+                            setDropdownTitle(`${symbols[1]} Side`);
+                          }
+                        }}
+                        className="token-val"
+                      >
                         {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[1] === 'GOLD' && (
                         <img
@@ -762,15 +785,11 @@ function BuyTugDataTable() {
   const [curMultiplier, setCurMultiplier] = useState();
   const [tugDur, setTugDur] = useState();
   const [price, setPrice] = useState();
-  const [days, setDays] = useState(2);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMintues] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [[dys, hrs, mins, secs], setTime] = useState([days, hours, minutes, seconds]);
+  const [[dys, hrs, mins, secs], setTime] = useState([3, 0, 0, 0]);
 
   const tick = () => {
     if (dys === 0 && hrs === 0 && mins === 0 && secs === 0) {
-      setTime([1, 59, 59, 59]);
+      setTime([2, 59, 59, 59]);
     } else if (hrs === 0 && mins === 0 && secs === 0) {
       setTime([dys - 1, 59, 59, 59]);
     } else if (mins === 0 && secs === 0) {
@@ -793,7 +812,11 @@ function BuyTugDataTable() {
     return () => clearInterval(timerId);
   });
 
-  const main = async () => {
+  const main = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -805,186 +828,364 @@ function BuyTugDataTable() {
       const pythClient = new PythHttpClient(connection, pythPublicKey);
       const data = await pythClient.getData();
 
-      let priceSaved = {}
-      
-      for (const symbol of data.symbols) {
-        const priceRes = data.productPrice.get(symbol);
-        
-        if (priceRes.price && symbol === 'Crypto.ETH/USD') {
-          priceSaved.eth = priceRes.price
-        }
-        if (priceRes.price && symbol === 'Crypto.BTC/USD') {
-          priceSaved.btc = priceRes.price
-        } 
-        if (priceRes.price && symbol === 'Equity.US.MSFT/USD') {
-          priceSaved.msft = priceRes.price
-        }
-        if (priceRes.price && symbol === 'Metal.XAU/USD') {
-          priceSaved.xau = priceRes.price
-        }
-      }
+      const priceSaved = {};
 
-      setPrice(priceSaved)
+      data.symbols.forEach((symbol) => {
+        const priceRes = data.productPrice.get(symbol);
+
+        if (priceRes.price) {
+          switch (symbol) {
+            case 'Crypto.ETH/USD':
+              priceSaved.eth = priceRes.price;
+              break;
+            case 'Crypto.BTC/USD':
+              priceSaved.btc = priceRes.price;
+              break;
+            case 'Equity.US.MSFT/USD':
+              priceSaved.msft = priceRes.price;
+              break;
+            case 'Metal.XAU/USD':
+              priceSaved.xau = priceRes.price;
+              break;
+            default:
+              break;
+          }
+        }
+      });
+
+      setPrice(priceSaved);
 
       // =============== getPrice end ==============
 
       const tokenRegistryContact = new web3.eth.Contract(TOKEN_REGISTRY_ABI, TOKEN_REGISTRY);
 
       // let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]]
-      let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[2]]
+      const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
+        FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
 
-      let totalData = [];
+      // const promises = pairsArry.map(async (pair, index) => {
+      //   const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
+      //   let startTime = await tugPairContact.methods.startTime().call();
+      //   startTime = Math.round(startTime);
 
-      for (let item = 0; item < pairsArry.length; item++) {
-        // setting time and payoff
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pairsArry[item].id);
-        let startTime = await tugPairContact.methods.startTime().call();
+      //   let tugDuration = await tugPairContact.methods.epochDuration().call();
+      //   tugDuration = Math.round(tugDuration);
+
+      //   setTugDur(tugDuration);
+
+      //   const currentTimeinEpochSeconds = Math.round(Date.now() / 1000);
+
+      //   const currentEpoch = await tugPairContact.methods.currentEpoch().call();
+
+      //   let result222 = tugDuration - ((currentTimeinEpochSeconds - startTime) % tugDuration);
+
+      //   const days = Math.floor(result222 / (3600 * 24));
+      //   const deltaDays = Math.floor(result222 / (3600 * 24)) % (tugDuration / 3600 / 24);
+
+      //   result222 -= days * 3600 * 24;
+
+      //   const deltaHrs = Math.floor(result222 / 3600);
+
+      //   result222 -= deltaHrs * 3600;
+
+      //   const deltaMnts = Math.floor(result222 / 60);
+
+      //   result222 -= deltaMnts * 60;
+
+      //   const timeToExpiry = `${deltaDays}d:${deltaHrs}h:${deltaMnts}m:${result222}s`; // 10/29/2013
+      //   // set Current Time
+      //   setTime([deltaDays, deltaHrs, deltaMnts, result222]);
+
+      //   const currentMultiplier = 0;
+      //   const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();
+
+      //   const token0Initialprice = EpochData.token0InitialPrice / 10 ** 26;
+      //   const token1Initialprice = EpochData.token1InitialPrice / 10 ** 26;
+
+      //   const totalPoolSize = web3.utils.fromWei(EpochData.totalPot.toString(), 'ether');
+
+      //   const totalToken0Shares = web3.utils.fromWei(EpochData.token0SharesIssued.toString(), 'ether');
+      //   const totalToken1Shares = web3.utils.fromWei(EpochData.token1SharesIssued.toString(), 'ether');
+
+      //   // default
+      //   let token1Symbol;
+      //   let token0Symbol;
+
+      //   const token1SymbolRes = await tokenRegistryContact
+      //     .methods.getSymbol(pair.token1Index).call();
+      //   const token0SymbolRes = await tokenRegistryContact
+      //     .methods.getSymbol(pair.token0Index).call();
+
+      //   // QtyOfShareToIssue
+      //   let sharesForOneDai0;
+      //   let sharesForOneDai1;
+
+      //   let token1CurrentPrice;
+      //   let token0CurrentPrice;
+
+      //   if (token1SymbolRes === 'Crypto.BTC/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
+      //     token1Symbol = 'BTC';
+      //     token0Symbol = 'ETH';
+
+      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+      //     token1CurrentPrice = Number(priceSaved.btc);
+      //     token0CurrentPrice = Number(priceSaved.eth);
+      //   } else if (token1SymbolRes === 'Equity.US.MSFT/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
+      //     token1Symbol = 'MSFT';
+      //     token0Symbol = 'ETH';
+
+      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+      //     token1CurrentPrice = Number(priceSaved.msft);
+      //     token0CurrentPrice = Number(priceSaved.eth);
+      //   } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
+      //     token1Symbol = 'GOLD';
+      //     token0Symbol = 'BTC';
+
+      //     sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+      //     sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+      //     token1CurrentPrice = Number(priceSaved.xau);
+      //     token0CurrentPrice = Number(priceSaved.btc);
+      //   }
+
+      //   const TOKEN1currentPrice = token1CurrentPrice / 10 ** 8;
+      //   const TOKEN0currentPrice = token0CurrentPrice / 10 ** 8;
+
+      //   const tokenAprice = ((TOKEN0currentPrice - token0Initialprice) / token0Initialprice) * 100;
+      //   const tokenBprice = ((TOKEN1currentPrice - token1Initialprice) / token1Initialprice) * 100;
+      //   const currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
+      //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
+      //   * parseFloat(sharesForOneDai0)) || 0;
+
+      //   const currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
+      //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
+      //   * parseFloat(sharesForOneDai1)) || 0;
+
+      //   let tokenADeposit = (parseFloat(totalToken0Shares)
+      //   / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
+      //   let tokenBDeposit = (parseFloat(totalToken1Shares)
+      //   / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
+
+      //   if (totalToken0Shares === '0') {
+      //     tokenADeposit = 0;
+      //   } else {
+      //     tokenADeposit = tokenADeposit.toFixed(2);
+      //   }
+      //   if (totalToken1Shares === '0') {
+      //     tokenBDeposit = 0;
+      //   } else {
+      //     tokenBDeposit = tokenBDeposit.toFixed(2);
+      //   }
+
+      //   const btnFlag = false;
+
+      //   const colorFlag = parseFloat(tokenAprice) >= parseFloat(tokenBprice);
+      //   return {
+      //     currentPayoffA,
+      //     currentPayoffB,
+      //     TOKEN0currentPrice,
+      //     TOKEN1currentPrice,
+      //     totalToken0Shares,
+      //     totalToken1Shares,
+      //     totalPoolSize,
+      //     no: index + 1,
+      //     type: pair.type,
+      //     id: pair.id,
+      //     timeToExpiry,
+      //     currentMultiplier,
+      //     tokenAprice,
+      //     tokenBprice,
+      //     priceSynthA: ((parseFloat(pair.totalToken0Deposits)
+      //     / parseFloat(pair.totalDeposits)) * 100),
+      //     priceSynthB: ((parseFloat(pair.totalToken1Deposits)
+      //     / parseFloat(pair.totalDeposits)) * 100),
+      //     token0Symbol,
+      //     token1Symbol,
+      //     tokenADeposit,
+      //     tokenBDeposit,
+      //     btnFlag,
+      //     colorFlag,
+      //   };
+      // });
+
+      // const totalData = await Promise.all(promises);
+
+      const totalData = await pairsArry.reduce(async (accumulatorPromise, pair, index) => {
+        const accumulator = await accumulatorPromise;
+
+        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
+        let startTime = pair.startTime;
         startTime = Math.round(startTime);
-        
-        let tugDuration = await tugPairContact.methods.epochDuration().call();
+
+        let tugDuration = pair.tugDuration;
         tugDuration = Math.round(tugDuration);
-        
+
         setTugDur(tugDuration);
-        
+
         const currentTimeinEpochSeconds = Math.round(Date.now() / 1000);
-        
+
         const currentEpoch = await tugPairContact.methods.currentEpoch().call();
 
-        let result222 = tugDuration - (currentTimeinEpochSeconds - startTime) % tugDuration;
-        
+        let result222 = tugDuration - ((currentTimeinEpochSeconds - startTime) % tugDuration);
+
         const days = Math.floor(result222 / (3600 * 24));
         const deltaDays = Math.floor(result222 / (3600 * 24)) % (tugDuration / 3600 / 24);
-        
+
         result222 -= days * 3600 * 24;
-        
+
         const deltaHrs = Math.floor(result222 / 3600);
-        
+
         result222 -= deltaHrs * 3600;
-        
+
         const deltaMnts = Math.floor(result222 / 60);
-        
+
         result222 -= deltaMnts * 60;
-        
+
         const timeToExpiry = `${deltaDays}d:${deltaHrs}h:${deltaMnts}m:${result222}s`; // 10/29/2013
         // set Current Time
         setTime([deltaDays, deltaHrs, deltaMnts, result222]);
-        
+
         const currentMultiplier = 0;
-        const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();        
-        
+        const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();
+
         const token0Initialprice = EpochData.token0InitialPrice / 10 ** 26;
         const token1Initialprice = EpochData.token1InitialPrice / 10 ** 26;
-        
-        const totalPoolSize = EpochData.totalPot;
-        
-        const totalToken0Shares = EpochData.token0SharesIssued;
-        const totalToken1Shares = EpochData.token1SharesIssued;
-        
+
+        const totalPoolSize = web3.utils.fromWei(EpochData.totalPot.toString(), 'ether');
+
+        const totalToken0Shares = web3.utils.fromWei(EpochData.token0SharesIssued.toString(), 'ether');
+        const totalToken1Shares = web3.utils.fromWei(EpochData.token1SharesIssued.toString(), 'ether');
+
         // default
         let token1Symbol;
         let token0Symbol;
 
-        const token1SymbolRes = await tokenRegistryContact.methods.getSymbol(pairsArry[item].token1Index).call();
-        const token0SymbolRes = await tokenRegistryContact.methods.getSymbol(pairsArry[item].token0Index).call();
-        
+        const token1SymbolRes = await tokenRegistryContact
+            .methods.getSymbol(pair.token1Index).call();
+        const token0SymbolRes = await tokenRegistryContact
+            .methods.getSymbol(pair.token0Index).call();
+
         // QtyOfShareToIssue
         let sharesForOneDai0;
         let sharesForOneDai1;
 
-        let token1CurrentPrice
-        let token0CurrentPrice
-        
+        let token1CurrentPrice;
+        let token0CurrentPrice;
+
         if (token1SymbolRes === 'Crypto.BTC/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
-          token1Symbol = 'BTC';
-          token0Symbol = 'ETH';
+            token1Symbol = 'BTC';
+            token0Symbol = 'ETH';
 
-          sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 0).call();
-          sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 1).call();
-          
-          token1CurrentPrice = Number(priceSaved.btc)
-          token0CurrentPrice = Number(priceSaved.eth)
+            sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+            sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+            token1CurrentPrice = Number(priceSaved.btc);
+            token0CurrentPrice = Number(priceSaved.eth);
         } else if (token1SymbolRes === 'Equity.US.MSFT/USD' && token0SymbolRes === 'Crypto.ETH/USD') {
-          token1Symbol = 'MSFT';
-          token0Symbol = 'ETH';
+            token1Symbol = 'MSFT';
+            token0Symbol = 'ETH';
 
-          sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 0).call();
-          sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 1).call();
-        
-          token1CurrentPrice = Number(priceSaved.msft)
-          token0CurrentPrice = Number(priceSaved.eth)
+            sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+            sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+            token1CurrentPrice = Number(priceSaved.msft);
+            token0CurrentPrice = Number(priceSaved.eth);
         } else if (token1SymbolRes === 'Metal.XAU/USD' && token0SymbolRes === 'Crypto.BTC/USD') {
-          token1Symbol = 'GOLD';
-          token0Symbol = 'BTC';
+            token1Symbol = 'GOLD';
+            token0Symbol = 'BTC';
 
-          sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 0).call();
-          sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ^ 8, 1).call();
-          
-          token1CurrentPrice = Number(priceSaved.xau)
-          token0CurrentPrice = Number(priceSaved.btc)
+            sharesForOneDai0 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 0).call();
+            sharesForOneDai1 = await tugPairContact.methods.getQtyOfSharesToIssue(10 ** 8, 1).call();
+
+            token1CurrentPrice = Number(priceSaved.xau);
+            token0CurrentPrice = Number(priceSaved.btc);
         }
-        
+
         const TOKEN1currentPrice = token1CurrentPrice / 10 ** 8;
         const TOKEN0currentPrice = token0CurrentPrice / 10 ** 8;
-        
+
         const tokenAprice = ((TOKEN0currentPrice - token0Initialprice) / token0Initialprice) * 100;
         const tokenBprice = ((TOKEN1currentPrice - token1Initialprice) / token1Initialprice) * 100;
-        const currentPayoffA = (((parseInt(totalPoolSize) * (0.79)) / (parseInt(totalToken0Shares) + parseInt(sharesForOneDai0))) * parseInt(sharesForOneDai0)) || 0;
 
-        const currentPayoffB = (((parseInt(totalPoolSize) * (0.79)) / (parseInt(totalToken1Shares) + parseInt(sharesForOneDai1))) * parseInt(sharesForOneDai1)) || 0;
-        
-        let tokenADeposit = (parseInt(totalToken0Shares) / (parseInt(totalToken0Shares) + parseInt(totalToken1Shares))) * 100;
-        let tokenBDeposit = (parseInt(totalToken1Shares) / (parseInt(totalToken0Shares) + parseInt(totalToken1Shares))) * 100;
-        
-        if (totalToken0Shares === '0') {
-          tokenADeposit = 0;
+        let currentPayoffA = 0;
+        let currentPayoffB = 0;
+
+        if (pair.type === 'Yield') {
+          const dailyETHYield = 0.04;
+          const daysInTugPeriod = 3;
+          const daysInYear = 365;
+
+          // Calculate the daily yield per token for token A
+          const dailyYieldPerTokenA = dailyETHYield * (daysInTugPeriod / daysInYear) * totalPoolSize * 0.8;
+
+          currentPayoffA = (dailyYieldPerTokenA / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0))) * currentMultiplier || 0;
+
+          currentPayoffB = (dailyYieldPerTokenA / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1))) * currentMultiplier || 0;
         } else {
-          tokenADeposit = tokenADeposit.toFixed(2);
+          currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
+            / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
+            * parseFloat(sharesForOneDai0)) || 0;
+
+          currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
+            / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
+            * parseFloat(sharesForOneDai1)) || 0;
+        }
+
+
+        let tokenADeposit = (parseFloat(totalToken0Shares)
+            / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
+        let tokenBDeposit = (parseFloat(totalToken1Shares)
+            / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
+
+        if (totalToken0Shares === '0') {
+            tokenADeposit = 0;
+        } else {
+            tokenADeposit = tokenADeposit.toFixed(2);
         }
         if (totalToken1Shares === '0') {
-          tokenBDeposit = 0;
+            tokenBDeposit = 0;
         } else {
-          tokenBDeposit = tokenBDeposit.toFixed(2);
+            tokenBDeposit = tokenBDeposit.toFixed(2);
         }
-        
-        let btnFlag = false;
+
+        const btnFlag = false;
 
         const colorFlag = parseFloat(tokenAprice) >= parseFloat(tokenBprice);
-        totalData = [...totalData, {
-          currentPayoffA,
-          currentPayoffB,
-          TOKEN0currentPrice,
-          TOKEN1currentPrice,
-          totalToken0Shares,
-          totalToken1Shares,
-          totalPoolSize,
-          no: item + 1,
-          id: pairsArry[item].id,
-          timeToExpiry,
-          currentMultiplier,
-          tokenAprice,
-          tokenBprice,
-          priceSynthA: ((parseInt(pairsArry[item]?.totalToken0Deposits) / parseInt(pairsArry[item]?.totalDeposits)) * 100),
-          token0Symbol,
-          token1Symbol,
-          tokenADeposit,
-          tokenBDeposit,
-          btnFlag,
-          colorFlag,
-        }];
-        
-      }
-      const pairsArry2 = FAKE_DATA.tugPairs;
-      totalData = totalData.map((item) => {
-        const isDataExist = pairsArry2.find((o) => o.id === item.id);
-        if (isDataExist) {
-          return {
-            ...item,
-            priceSynthB: ((parseInt(isDataExist.totalToken1Deposits) / parseInt(isDataExist.totalDeposits)) * 100),
-          };
-        }
-        return { ...item };
-      });
-      
+
+        accumulator.push({
+            currentPayoffA,
+            currentPayoffB,
+            TOKEN0currentPrice,
+            TOKEN1currentPrice,
+            totalToken0Shares,
+            totalToken1Shares,
+            totalPoolSize,
+            no: index + 1,
+            type: pair.type,
+            // id: pair.id,
+            id: uuidv4(),
+            timeToExpiry,
+            currentMultiplier,
+            tokenAprice,
+            tokenBprice,
+            priceSynthA: ((parseFloat(pair.totalToken0Deposits)
+                / parseFloat(pair.totalDeposits)) * 100),
+            priceSynthB: ((parseFloat(pair.totalToken1Deposits)
+                / parseFloat(pair.totalDeposits)) * 100),
+            token0Symbol,
+            token1Symbol,
+            tokenADeposit,
+            tokenBDeposit,
+            btnFlag,
+            colorFlag,
+        });
+
+        return accumulator;
+    }, Promise.resolve([]));
 
       const localData = { expiryTime: moment().add(2, 'hours').unix(), buyTugData: JSON.stringify(totalData) };
 
@@ -994,36 +1195,50 @@ function BuyTugDataTable() {
       setLoading(false);
     } catch (error) {
       console.log('erorrrrrrrrr', error);
+
+      if (error.code === -32007) {
+        toast.error('Request limit reached', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+        });
+      }
     }
-  };
+  }, [web3]);
+
+  const debouncedMain = useCallback(debounce(main, 1000), [main]);
 
   useEffect(() => {
     if (
-      dys === 2
+      dys === 3
       && hrs === 0
       && mins === 0
       && secs === 0
     ) {
-      main();
+      debouncedMain();
     }
-  });
+  }, [dys, hrs, mins, secs, debouncedMain]);
 
   useEffect(() => {
-    if (address) {
-      main();
+    if (address && web3) {
+      debouncedMain();
     }
-  }, [address]);
+  }, [address, web3, debouncedMain]);
 
   useEffect(() => {
     if (modalShow && address) {
-      main();
+      debouncedMain();
     }
-  }, [modalShow, address]);
+  }, [modalShow, address, debouncedMain]);
 
   const columns = [
     {
       name: 'ID',
       selector: (row) => row.no,
+      sortable: true,
+    },
+    {
+      name: 'Tug Type',
+      selector: (row) => row.type,
       sortable: true,
     },
     {
@@ -1034,8 +1249,8 @@ function BuyTugDataTable() {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">
-                <ETHIcon width="1rem" className="iconSvg ethIcon" />
-                <BTCIcon width="1rem" className="iconSvg " />
+                <ETHIcon width="1rem" className="iconSvg" />
+                <BTCIcon width="1rem" className="iconSvg btcIcon" />
               </span>
               <span className="tugPairTitle">
                 {row.token0Symbol}
@@ -1044,12 +1259,12 @@ function BuyTugDataTable() {
               </span>
             </div>
           );
-        } else if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
+        } if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">
                 <ETHIcon width="1rem" className="iconSvg" />
-                <img src={msftLogo} className="iconSvg btcIcon" style={{ width: '1rem', top: "9px", borderRadius: '100%' }} alt="" />
+                <img src={msftLogo} className="iconSvg btcIcon" style={{ width: '1rem', top: '9px', borderRadius: '100%' }} alt="" />
               </span>
               <span className="tugPairTitle">
                 {row.token0Symbol}
@@ -1058,7 +1273,7 @@ function BuyTugDataTable() {
               </span>
             </div>
           );
-        } else if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
+        } if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
           return (
             <div className="tugpairsGroup">
               <span className="tugpairsIcon">
@@ -1128,14 +1343,14 @@ function BuyTugDataTable() {
       sortable: true,
     },
     {
-      name: 'Total Pool Size ($)',
-      selector: (row) => `$${row.totalPoolSize}`,
+      name: 'Total Pool Size (WETH)',
+      selector: (row) => `${row.totalPoolSize}`,
       sortable: true,
 
     },
     {
       name: 'Current payoff per WETH (A wins/B wins)',
-      selector: (row) => (`$${row.currentPayoffA.toFixed(2)}/$${row.currentPayoffB.toFixed(2)}`),
+      selector: (row) => (`${row.currentPayoffA.toFixed(2)}/${row.currentPayoffB.toFixed(2)}`),
       sortable: true,
       style: {
         div: {
@@ -1204,15 +1419,10 @@ function BuyTugDataTable() {
     if (params.node.rowIndex % 2 === 0) {
       return { background: 'red' };
     }
+
+    return null;
   };
 
-  function FilterComponent() {
-    return (
-      <>
-
-      </>
-    );
-  }
   useEffect(() => {
     if (window.innerWidth < 600) {
       setHideDirector(true);
@@ -1242,7 +1452,7 @@ function BuyTugDataTable() {
     }
 
     setHideDirector(false);
-  }, []);
+  }, [address]);
 
   return (
     <div className="invent-comp py-4">
@@ -1285,13 +1495,22 @@ function BuyTugDataTable() {
         data={buyTugData}
         customStyles={customStyles}
         rowS
-        paginationResetDefaultPage={resetPaginationToggle} // optionally, a hook to reset pagination to page 1
+        paginationResetDefaultPage={resetPaginationToggle}
+        // optionally, a hook to reset pagination to page 1
         subHeader
         subHeaderComponent={subHeaderComponentMemo}
         persistTableHead
         getRowStyle={getRowStyle}
       />
     </div>
+  );
+}
+
+function FilterComponent() {
+  return (
+    <>
+
+    </>
   );
 }
 
