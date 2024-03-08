@@ -16,7 +16,6 @@ import {
 import _ from 'lodash';
 import debounce from 'lodash/debounce';
 import moment from 'moment';
-import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
 import { PythHttpClient } from '@pythnetwork/client';
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -1171,8 +1170,7 @@ function BuyTugDataTable() {
             totalPoolSize,
             no: index + 1,
             type: pair.type,
-            // id: pair.id,
-            id: uuidv4(),
+            id: pair.id,
             timeToExpiry,
             currentMultiplier,
             tokenAprice,
