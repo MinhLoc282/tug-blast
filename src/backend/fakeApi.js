@@ -1,5 +1,5 @@
 /* eslint-disable import/prefer-default-export */
-import { TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT } from '../constant';
+import { TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC_FULL } from '../constant';
 
 export const FAKE_DATA = {
   tugPairs: [
@@ -8,16 +8,16 @@ export const FAKE_DATA = {
       type: 'Yield',
       token0Index: 2,
       token1Index: 1,
-      startTime: 1707900000,
-      tugDuration: 3600,
+      startTime: 1709860000,
+      tugDuration: 259200,
     },
     {
-      id: TUGPAIR_ETH_BTC,
+      id: TUGPAIR_ETH_BTC_FULL,
       type: 'Full',
       token0Index: 2,
       token1Index: 1,
-      startTime: 1707900000,
-      tugDuration: 3600,
+      startTime: 1709860000,
+      tugDuration: 259200,
     },
     {
       id: TUGPAIR_ETH_MSFT,
@@ -31,16 +31,16 @@ export const FAKE_DATA = {
       type: 'Yield',
       token0Index: 1,
       token1Index: 4,
-      startTime: 1707900000,
-      tugDuration: 3600,
+      startTime: 1709860000,
+      tugDuration: 259200,
     },
     {
-      id: TUGPAIR_BTC_XAU,
+      id: TUGPAIR_BTC_XAU_FULL,
       type: 'Full',
       token0Index: 1,
       token1Index: 4,
-      startTime: 1707900000,
-      tugDuration: 3600,
+      startTime: 1709860000,
+      tugDuration: 259200,
     },
   ],
   pairUsers: [
