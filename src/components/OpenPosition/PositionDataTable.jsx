@@ -387,7 +387,7 @@ function ButTugModal(props) {
       const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
       await tugPairContract.methods
-        .deposit(approvalAmount, Number(sideS), priceUpdateData)
+        .deposit(approvalAmount.toString(), Number(sideS), priceUpdateData)
         .send({ from: address, value: updateFee });
 
       setLoading(false);
@@ -443,7 +443,7 @@ function ButTugModal(props) {
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, approvalAmount)
+          .approve(TUGPAIR_ETH_BTC, approvalAmount.toString())
           .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
@@ -459,7 +459,7 @@ function ButTugModal(props) {
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, approvalAmount)
+          .approve(TUGPAIR_ETH_MSFT, approvalAmount.toString())
           .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
@@ -475,7 +475,7 @@ function ButTugModal(props) {
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, approvalAmount)
+          .approve(TUGPAIR_BTC_XAU, approvalAmount.toString())
           .send({ from: address });
       }
 
