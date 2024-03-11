@@ -1046,7 +1046,6 @@ function BuyTugDataTable() {
             * parseFloat(sharesForOneDai1)) || 0;
         }
 
-
         let tokenADeposit = (parseFloat(totalToken0Shares)
             / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
         let tokenBDeposit = (parseFloat(totalToken1Shares)
@@ -1123,22 +1122,28 @@ function BuyTugDataTable() {
     const delayedUpdate = debounce(() => {
         if (yieldMultiplier && buyTugData && tugDur) {
             const updatedData = buyTugData.map(item => {
-                const totalPoolBigNum = new BigNumber(item.totalPoolSize);
-                const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
-                const payoffs = calculateCurrentPayoffs(
-                    totalPoolSize,
-                    item.totalToken0Shares,
-                    item.sharesForOneDai0,
-                    item.totalToken1Shares,
-                    item.sharesForOneDai1,
-                    yieldMultiplier
-                );
-
+              if (item.type === "Full") {
                 return {
-                    ...item,
-                    currentPayoffA: payoffs.currentPayoffA,
-                    currentPayoffB: payoffs.currentPayoffB
-                };
+                  ...item,
+                }
+              }
+
+              const totalPoolBigNum = new BigNumber(item.totalPoolSize);
+              const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
+              const payoffs = calculateCurrentPayoffs(
+                  totalPoolSize,
+                  item.totalToken0Shares,
+                  item.sharesForOneDai0,
+                  item.totalToken1Shares,
+                  item.sharesForOneDai1,
+                  yieldMultiplier
+              );
+
+              return {
+                  ...item,
+                  currentPayoffA: payoffs.currentPayoffA,
+                  currentPayoffB: payoffs.currentPayoffB
+              };
             });
             setBuyTugData(updatedData);
         }
@@ -1192,7 +1197,7 @@ function BuyTugDataTable() {
       cell: (row) => {
         if (row.token0Symbol === 'ETH' && row.token1Symbol === 'BTC') {
           return (
-            <div className="tugpairsGroup">
+            <span className="tugpairsGroup">
               <span className="tugpairsIcon">
                 <ETHIcon width="1rem" className="iconSvg" />
                 <BTCIcon width="1rem" className="iconSvg btcIcon" />
@@ -1202,11 +1207,11 @@ function BuyTugDataTable() {
                 /
                 {row.token1Symbol}
               </span>
-            </div>
+            </span>
           );
         } if (row.token0Symbol === 'ETH' && row.token1Symbol === 'MSFT') {
           return (
-            <div className="tugpairsGroup">
+            <span className="tugpairsGroup">
               <span className="tugpairsIcon">
                 <ETHIcon width="1rem" className="iconSvg" />
                 <img src={msftLogo} className="iconSvg btcIcon" style={{ width: '1rem', top: '9px', borderRadius: '100%' }} alt="" />
@@ -1216,11 +1221,11 @@ function BuyTugDataTable() {
                 /
                 {row.token1Symbol}
               </span>
-            </div>
+            </span>
           );
         } if (row.token0Symbol === 'BTC' && row.token1Symbol === 'GOLD') {
           return (
-            <div className="tugpairsGroup">
+            <span className="tugpairsGroup">
               <span className="tugpairsIcon">
                 <BTCIcon width="1rem" className="iconSvg " />
                 <img src={gldLogo} className="iconSvg btcIcon" style={{ width: '1rem', marginTop: '40px', borderRadius: '100%' }} alt="" />
@@ -1230,11 +1235,11 @@ function BuyTugDataTable() {
                 /
                 {row.token1Symbol}
               </span>
-            </div>
+            </span>
           );
         }
         return (
-          <div className="tugpairsGroup">
+          <span className="tugpairsGroup">
             <span className="tugpairsIcon">
               <img src={tslaLogo} className="iconSvg" style={{ width: '1rem', borderRadius: '100%' }} alt="" />
               <img src={dogeLogo} className="iconSvg btcIcon" style={{ width: '1rem', marginTop: '18px', borderRadius: '100%' }} alt="" />
@@ -1244,7 +1249,7 @@ function BuyTugDataTable() {
               /
               {row.token1Symbol}
             </span>
-          </div>
+          </span>
         );
       },
     },
@@ -1282,42 +1287,50 @@ function BuyTugDataTable() {
     },
     {
       name: 'Token A Price Change (%)',
-      selector: (row) => <div style={{ color: row.colorFlag ? '#15A624' : '#ED5828' }}>{(`${['', '+'][+(row.tokenAprice > 0)] + row.tokenAprice.toFixed(2)}%`)}</div>,
+      selector: (row) => <span style={{ color: row.colorFlag ? '#15A624' : '#ED5828' }}>{(`${['', '+'][+(row.tokenAprice > 0)] + row.tokenAprice.toFixed(2)}%`)}</span>,
       sortable: true,
       cellClass: 'tokenAPChange',
       field: 'string',
     },
     {
       name: 'Token B Price Change (%)',
-      selector: (row) => <div style={{ color: !row.colorFlag ? '#15A624' : '#ED5828' }}>{(`${['', '+'][+(row.tokenBprice > 0)] + row.tokenBprice.toFixed(2)}%`)}</div>,
+      selector: (row) => (
+        <span style={{ color: !row.colorFlag ? '#15A624' : '#ED5828' }}>
+          {`${['', '+'][+(row.tokenBprice > 0)] + row.tokenBprice.toFixed(2)}%`}
+        </span>
+      ),
       sortable: true,
       class: 'kkk',
     },
     {
       name: 'Token A Deposit %',
-      selector: (row) => `${row.tokenADeposit}%`,
+      selector: (row) => (
+        <span>{`${row.tokenADeposit}%`}</span>
+      ),
       sortable: true,
     },
     {
       name: 'Token B Deposit %',
-      selector: (row) => `${row.tokenBDeposit}%`,
+      selector: (row) => (
+        <span>{`${row.tokenBDeposit}%`}</span>
+      ),
       sortable: true,
     },
     {
       name: 'WETH Total Pool Size (in gwei)',
-      selector: (row) => `${row.totalPoolSize}`,
+      selector: (row) => (
+        <span>{`${row.totalPoolSize}`}</span>
+      ),
       sortable: true,
-
     },
     {
       name: 'Current payoff per WETH (A wins/B wins)',
-      selector: (row) => (`${row.currentPayoffA.toFixed(2)}/${row.currentPayoffB.toFixed(2)}`),
+      selector: (row) => (
+        <span style={{ color: '#9584FF' }}>
+          {`${row.currentPayoffA.toFixed(2)}/${row.currentPayoffB.toFixed(2)}`}
+        </span>
+      ),
       sortable: true,
-      style: {
-        div: {
-          color: '#9584FF',
-        },
-      },
     },
     {
       name: '',
