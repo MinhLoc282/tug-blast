@@ -461,7 +461,7 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount);
+        const amountBigNum = new BigNumber(amount || 0);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
@@ -477,7 +477,7 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount);
+        const amountBigNum = new BigNumber(amount || 0);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
@@ -493,7 +493,7 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount);
+        const amountBigNum = new BigNumber(amount || 0);
         const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
 
         await tokenContact.methods
