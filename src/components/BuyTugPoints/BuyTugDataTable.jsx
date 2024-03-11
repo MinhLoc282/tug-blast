@@ -47,6 +47,7 @@ import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
 // import { PYTH_ABI } from '../../constant/pythAbi';
 import { TOKEN_ABI } from '../../constant/tokenAbi';
 import { useWeb3Signer } from '../../hooks/ethersHooks';
+import { ethers } from 'ethers';
 
 function TokenSuccessModal(props) {
   const dispatch = useDispatch();
@@ -279,24 +280,23 @@ function ButTugModal(props) {
     let sharesA;
     let sharesB;
 
-    const numberBigNum = new BigNumber(number || 0);
-    const numberInWei = numberBigNum.times(new BigNumber(10).pow(18));
+    const numberInWei = ethers.utils.parseUnits(number || 0, 18)
 
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
@@ -395,11 +395,10 @@ function ButTugModal(props) {
 
       //   console.log('============getPrice==============', getPrice);
 
-      const amountBigNum = new BigNumber(amount || 0);
-      const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
+      const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
       await tugPairContract.methods
-        .deposit(approvalAmount.toString(), Number(sideS), priceUpdateData)
+        .deposit(approvalAmount, Number(sideS), priceUpdateData)
         .send({ from: address, value: updateFee });
 
       dispatch(decreasePending());
@@ -461,11 +460,10 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount || 0);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
+        const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, approvalAmount.toString())
+          .approve(TUGPAIR_ETH_BTC, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
@@ -477,11 +475,10 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount || 0);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
+        const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, approvalAmount.toString())
+          .approve(TUGPAIR_ETH_MSFT, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
@@ -493,11 +490,10 @@ function ButTugModal(props) {
 
         const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
 
-        const amountBigNum = new BigNumber(amount || 0);
-        const approvalAmount = amountBigNum.times(new BigNumber(10).pow(18));
+        const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, approvalAmount.toString())
+          .approve(TUGPAIR_BTC_XAU, approvalAmount)
           .send({ from: address });
       }
 
