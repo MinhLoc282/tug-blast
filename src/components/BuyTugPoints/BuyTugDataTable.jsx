@@ -13,7 +13,6 @@ import {
   Modal,
   CloseButton,
 } from 'react-bootstrap';
-import _ from 'lodash';
 import debounce from 'lodash/debounce';
 import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
@@ -260,11 +259,11 @@ function ButTugModal(props) {
 
   const getShares = useCallback(async (number) => {
     // return;
-    if (number === 0) {
+    if (number === 0 || number === "0") {
       setnoOfShares('0');
       return;
     }
-    if (number === undefined || number === null) { return; }
+    if (number === undefined || number === null || number === '') { return; }
     if (sideS < 0) {
       return;
     }
@@ -280,7 +279,9 @@ function ButTugModal(props) {
     let sharesA;
     let sharesB;
 
-    const numberInWei = ethers.utils.parseUnits(number || 0, 18)
+    const numberInWei = ethers.utils.parseUnits(number, 18)
+
+    console.log(numberInWei.toString())
 
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
@@ -303,12 +304,12 @@ function ButTugModal(props) {
   }, [sideS, price, symbols, setnoOfShares, web3]);
 
   useEffect(() => {
-    getShares(amount);
+    const debouncedGetShares = debounce(getShares, 500);
+    debouncedGetShares(amount);
+    return () => {
+      debouncedGetShares.cancel();
+    };
   }, [sideS, amount, getShares]);
-
-  const debounceFun = _.debounce((number) => {
-    getShares(number);
-  }, 2000);
 
   const toggleBtn = async () => {
   };
@@ -677,8 +678,6 @@ function ButTugModal(props) {
                           onChange={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            // debounce here
-                            debounceFun(e.target?.value);
                             setAmount(e.target.value);
                           }}
                         />
