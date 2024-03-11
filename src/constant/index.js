@@ -37,5 +37,6 @@ export const XAU = '0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4e
 
 export const MSFT = '0xd0ca23c1cc005e004ccf1db5bf76aeb6a49218f43dac3d4b275e92de12ded4d1'
 
-
+// token address
+export const TOKEN_ADDRESS = '0x4200000000000000000000000000000000000023';
 

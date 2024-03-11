@@ -39,6 +39,7 @@ import tslaLogo from '../../assets/images/tsla.png';
 import dogeLogo from '../../assets/images/doge.png';
 import {
   CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS,
+  TOKEN_ADDRESS,
   TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL, TUGPAIR_ETH_MSFT,
 } from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
@@ -194,33 +195,15 @@ function ButTugModal(props) {
       let apAmount;
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       }
@@ -238,7 +221,7 @@ function ButTugModal(props) {
     const getBalance = async () => {
       try {
         if (address) {
-          const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+          const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
           const newBalance = await tokenContact.methods.balanceOf(address).call();
           const balanceToWei = web3.utils.fromWei(newBalance);
           const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
@@ -337,7 +320,7 @@ function ButTugModal(props) {
       const chainId = await web3.eth.getChainId();
 
       if (chainId !== 168587773) {
-        toast.error('Please connect the Smart Chain Testnet', {
+        toast.error('Please connect the Blast Sepolia Testnet', {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
         });
@@ -460,19 +443,7 @@ function ButTugModal(props) {
       setLoading(true);
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        let tugPairContact
-        if (selectedTugId === TUGPAIR_ETH_BTC) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-        } else if (selectedTugId === TUGPAIR_ETH_BTC_FULL) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
-        }
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -480,14 +451,7 @@ function ButTugModal(props) {
           .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -495,19 +459,7 @@ function ButTugModal(props) {
           .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        let tugPairContact
-        if (selectedTugId === TUGPAIR_BTC_XAU) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-        } else if (selectedTugId === TUGPAIR_BTC_XAU_FULL) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
-        }
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -921,8 +873,6 @@ function BuyTugDataTable() {
 
       // =============== getPrice end ==============
 
-      const tokenRegistryContact = new web3.eth.Contract(TOKEN_REGISTRY_ABI, TOKEN_REGISTRY);
-
       // let pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1], FAKE_DATA.tugPairs[2]]
       const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
         FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
@@ -982,10 +932,8 @@ function BuyTugDataTable() {
         let token1Symbol;
         let token0Symbol;
 
-        const token1SymbolRes = await tokenRegistryContact
-            .methods.getSymbol(pair.token1Index).call();
-        const token0SymbolRes = await tokenRegistryContact
-            .methods.getSymbol(pair.token0Index).call();
+        const token1SymbolRes = pair.token1Symbol;
+        const token0SymbolRes = pair.token0Symbol;
 
         // QtyOfShareToIssue
         let sharesForOneDai0;

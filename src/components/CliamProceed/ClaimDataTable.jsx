@@ -391,11 +391,6 @@ function ClaimProceedDataTable() {
     try {
       setLoading(true);
 
-      const tokenRegistryContact = new web3.eth.Contract(
-        TOKEN_REGISTRY_ABI,
-        TOKEN_REGISTRY,
-      );// tokenRegistryContractObj
-
       // tugPairs
       const pairsArry = [FAKE_DATA.tugPairs[0], FAKE_DATA.tugPairs[1],
         FAKE_DATA.tugPairs[3], FAKE_DATA.tugPairs[4]];
@@ -423,10 +418,8 @@ function ClaimProceedDataTable() {
           if (Number(resWinning) > 0) {
             status = 'Not Claimed';
 
-            const token1SymbolRes = await tokenRegistryContact
-              .methods.getSymbol(pair.token1Index).call();
-            const token0SymbolRes = await tokenRegistryContact
-              .methods.getSymbol(pair.token0Index).call();
+            const token1SymbolRes = pair.token1Symbol;
+            const token0SymbolRes = pair.token0Symbol;
 
             let token1Symbol;
             let token0Symbol;

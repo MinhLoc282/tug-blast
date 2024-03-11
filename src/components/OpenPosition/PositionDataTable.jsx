@@ -34,6 +34,7 @@ import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import {
   CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS,
+  TOKEN_ADDRESS,
   TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL, TUGPAIR_ETH_MSFT,
 } from '../../constant';
 import { TOKEN_ABI } from '../../constant/tokenAbi';
@@ -187,33 +188,15 @@ function ButTugModal(props) {
       let apAmount;
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       }
@@ -437,19 +420,7 @@ function ButTugModal(props) {
       setLoading(true);
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        let tugPairContact
-        if (selectedTugId === TUGPAIR_ETH_BTC) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
-        } else if (selectedTugId === TUGPAIR_ETH_BTC_FULL) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
-        }
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -457,14 +428,7 @@ function ButTugModal(props) {
           .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
-
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -472,18 +436,7 @@ function ButTugModal(props) {
           .approve(TUGPAIR_ETH_MSFT, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        let tugPairContact
-        if (selectedTugId === TUGPAIR_BTC_XAU) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
-        } else if (selectedTugId === TUGPAIR_BTC_XAU_FULL) {
-          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
-        }
-        const tokenAddress = await tugPairContact.methods
-          .depositToken()
-          .call();
-          // selectedTugId, amount > 100000 ? amount : 100000
-
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
@@ -880,10 +833,8 @@ function PositionDataTable() {
         // default
         let token1Symbol;
         let token0Symbol;
-        const token1SymbolRes = await tokenRegistryContact
-          .methods.getSymbol(pair.token1Index).call();
-        const token0SymbolRes = await tokenRegistryContact
-          .methods.getSymbol(pair.token0Index).call();
+        const token1SymbolRes = pair.token1Symbol;
+        const token0SymbolRes = pair.token0Symbol;
 
         // ======= setPrice start ==========
         let token1CurrentPrice;
