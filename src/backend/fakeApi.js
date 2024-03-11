@@ -17,7 +17,7 @@ export const FAKE_DATA = {
       token0Index: 2,
       token1Index: 1,
       startTime: 1709860000,
-      tugDuration: 259200,
+      tugDuration: 86400,
     },
     {
       id: TUGPAIR_ETH_MSFT,
@@ -40,7 +40,7 @@ export const FAKE_DATA = {
       token0Index: 1,
       token1Index: 4,
       startTime: 1709860000,
-      tugDuration: 259200,
+      tugDuration: 86400,
     },
   ],
   pairUsers: [

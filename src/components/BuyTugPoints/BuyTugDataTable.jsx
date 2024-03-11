@@ -39,7 +39,7 @@ import tslaLogo from '../../assets/images/tsla.png';
 import dogeLogo from '../../assets/images/doge.png';
 import {
   CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS,
-  TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC, TUGPAIR_ETH_MSFT,
+  TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL, TUGPAIR_ETH_MSFT,
 } from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
@@ -281,10 +281,13 @@ function ButTugModal(props) {
 
     const numberInWei = ethers.utils.parseUnits(number, 18)
 
-    console.log(numberInWei.toString())
-
     if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-      const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
+      let tugPairContact
+      if (selectedTugId === TUGPAIR_ETH_BTC) {
+        tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
+      } else if (selectedTugId === TUGPAIR_ETH_BTC_FULL) {
+        tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
+      }
 
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
@@ -294,14 +297,19 @@ function ButTugModal(props) {
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-      const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+      let tugPairContact
+      if (selectedTugId === TUGPAIR_BTC_XAU) {
+        tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+      } else if (selectedTugId === TUGPAIR_BTC_XAU_FULL) {
+        tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
+      }
 
       sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
       sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
-  }, [sideS, price, symbols, setnoOfShares, web3]);
+  }, [sideS, price, symbols, setnoOfShares, web3, selectedTugId]);
 
   useEffect(() => {
     const debouncedGetShares = debounce(getShares, 500);
@@ -452,7 +460,12 @@ function ButTugModal(props) {
       setLoading(true);
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
+        let tugPairContact
+        if (selectedTugId === TUGPAIR_ETH_BTC) {
+          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC);
+        } else if (selectedTugId === TUGPAIR_ETH_BTC_FULL) {
+          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
+        }
 
         const tokenAddress = await tugPairContact.methods
           .depositToken()
@@ -464,7 +477,7 @@ function ButTugModal(props) {
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_BTC, approvalAmount)
+          .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
@@ -479,10 +492,15 @@ function ButTugModal(props) {
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_ETH_MSFT, approvalAmount)
+          .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+        let tugPairContact
+        if (selectedTugId === TUGPAIR_BTC_XAU) {
+          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+        } else if (selectedTugId === TUGPAIR_BTC_XAU_FULL) {
+          tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
+        }
 
         const tokenAddress = await tugPairContact.methods
           .depositToken()
@@ -494,7 +512,7 @@ function ButTugModal(props) {
         const approvalAmount = ethers.utils.parseUnits(amount || 0, 18)
 
         await tokenContact.methods
-          .approve(TUGPAIR_BTC_XAU, approvalAmount)
+          .approve(selectedTugId, approvalAmount)
           .send({ from: address });
       }
 
@@ -779,30 +797,64 @@ function BuyTugDataTable() {
   const [loading, setLoading] = React.useState(false);
   const [buyTugData, setBuyTugData] = React.useState();
   const [selectedTugId, setSelectedTugId] = useState();
-  const [curMultiplier, setCurMultiplier] = useState(0);
+  const [yieldMultiplier, setYieldMultiplier] = useState(0);
+  const [fullMultiplier, setFullMultiplier] = useState(0);
   const [tugDur, setTugDur] = useState();
   const [price, setPrice] = useState();
-  const [[dys, hrs, mins, secs], setTime] = useState([3, 0, 0, 0]);
+  const [[dysYield, hrsYield, minsYield, secsYield], setYieldTime] = useState([3, 0, 0, 0]);
+  const [[dysFull, hrsFull, minsFull, secsFull], setFullTime] = useState([1, 0, 0, 0]);
 
   const tick = () => {
-    if (dys === 0 && hrs === 0 && mins === 0 && secs === 0) {
-      setTime([2, 59, 59, 59]);
-    } else if (hrs === 0 && mins === 0 && secs === 0) {
-      setTime([dys - 1, 59, 59, 59]);
-    } else if (mins === 0 && secs === 0) {
-      setTime([dys, hrs - 1, 59, 59]);
-    } else if (secs === 0) {
-      setTime([dys, hrs, mins - 1, 59]);
+    if (dysYield === 0 && hrsYield === 0 && minsYield === 0 && secsYield === 0) {
+      setYieldTime([2, 23, 59, 59]);
     } else {
-      setTime([dys, hrs, mins, secs - 1]);
+      setYieldTime(prevTime => {
+        const [dys, hrs, mins, secs] = prevTime;
+        if (hrs === 0 && mins === 0 && secs === 0) {
+          return [dys - 1, 23, 59, 59];
+        } else if (mins === 0 && secs === 0) {
+          return [dys, hrs - 1, 59, 59];
+        } else if (secs === 0) {
+          return [dys, hrs, mins - 1, 59];
+        } else {
+          return [dys, hrs, mins, secs - 1];
+        }
+      });
     }
 
-    const curExpTime = (((dys * 24 + hrs) * 60 + mins) * 60 + secs);
-    const cmp = (curExpTime / tugDur) * 2;
+    if (dysFull === 0 && hrsFull === 0 && minsFull === 0 && secsFull === 0) {
+      setFullTime([0, 23, 59, 59]);
+    } else {
+      setFullTime(prevTime => {
+        const [dys, hrs, mins, secs] = prevTime;
+        if (hrs === 0 && mins === 0 && secs === 0) {
+          return [dys - 1, 23, 59, 59];
+        } else if (mins === 0 && secs === 0) {
+          return [dys, hrs - 1, 59, 59];
+        } else if (secs === 0) {
+          return [dys, hrs, mins - 1, 59];
+        } else {
+          return [dys, hrs, mins, secs - 1];
+        }
+      });
+    }
 
-    const threshold = 0.001;
-    if (Math.abs(cmp - curMultiplier) >= threshold) {
-        setCurMultiplier(cmp);
+    // Update yield multiplier
+    const yieldExpTime = (((dysYield * 24 + hrsYield) * 60 + minsYield) * 60 + secsYield);
+    const yieldCmp = (yieldExpTime / tugDur) * 2;
+
+    const yieldThreshold = 0.001;
+    if (Math.abs(yieldCmp - yieldMultiplier) >= yieldThreshold) {
+        setYieldMultiplier(yieldCmp);
+    }
+
+    // Update full multiplier
+    const fullExpTime = (((dysFull * 24 + hrsFull) * 60 + minsFull) * 60 + secsFull);
+    const fullCmp = (fullExpTime / tugDur) * 2;
+
+    const fullThreshold = 0.001;
+    if (Math.abs(fullCmp - fullMultiplier) >= fullThreshold) {
+        setFullMultiplier(fullCmp);
     }
   };
 
@@ -910,7 +962,11 @@ function BuyTugDataTable() {
 
         const timeToExpiry = `${deltaDays}d:${deltaHrs}h:${deltaMnts}m:${result222}s`; // 10/29/2013
         // set Current Time
-        setTime([deltaDays, deltaHrs, deltaMnts, result222]);
+        if (pair.type === "Yield") {
+          setYieldTime([deltaDays, deltaHrs, deltaMnts, result222]);
+        } else if (pair.type === "Full") {
+          setFullTime([deltaDays, deltaHrs, deltaMnts, result222]);
+        }
 
         const EpochData = await tugPairContact.methods.epochData(currentEpoch).call();
 
@@ -977,7 +1033,7 @@ function BuyTugDataTable() {
         let currentPayoffB = 0;
 
         if (pair.type === 'Yield') {
-          const payoffs = calculateCurrentPayoffs(totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, curMultiplier);
+          const payoffs = calculateCurrentPayoffs(totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
           currentPayoffA = payoffs.currentPayoffA;
           currentPayoffB = payoffs.currentPayoffB;
         } else {
@@ -1023,7 +1079,7 @@ function BuyTugDataTable() {
             type: pair.type,
             id: pair.id,
             timeToExpiry,
-            currentMultiplier: curMultiplier || 0,
+            currentMultiplier: pair === "Yield" ? yieldMultiplier : fullMultiplier || 0,
             tokenAprice,
             tokenBprice,
             priceSynthA: ((parseFloat(pair.totalToken0Deposits)
@@ -1065,7 +1121,7 @@ function BuyTugDataTable() {
 
   useEffect(() => {
     const delayedUpdate = debounce(() => {
-        if (curMultiplier && buyTugData && tugDur) {
+        if (yieldMultiplier && buyTugData && tugDur) {
             const updatedData = buyTugData.map(item => {
                 const totalPoolBigNum = new BigNumber(item.totalPoolSize);
                 const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
@@ -1075,7 +1131,7 @@ function BuyTugDataTable() {
                     item.sharesForOneDai0,
                     item.totalToken1Shares,
                     item.sharesForOneDai1,
-                    curMultiplier
+                    yieldMultiplier
                 );
 
                 return {
@@ -1093,19 +1149,19 @@ function BuyTugDataTable() {
     return () => {
         delayedUpdate.cancel();
     };
-  }, [curMultiplier, tugDur]);
+  }, [yieldMultiplier, tugDur]);
 
 
   useEffect(() => {
     if (
-      dys === 3
-      && hrs === 0
-      && mins === 0
-      && secs === 0
+      dysYield === 3
+      && hrsYield === 0
+      && minsYield === 0
+      && secsYield === 0
     ) {
       debouncedMain();
     }
-  }, [dys, hrs, mins, secs, debouncedMain]);
+  }, [dysYield, hrsYield, minsYield, secsYield, debouncedMain]);
 
   useEffect(() => {
     if (address && web3) {
@@ -1195,7 +1251,15 @@ function BuyTugDataTable() {
 
     {
       name: 'Time to expiry DD:HH:MM:SS',
-      selector: () => `${dys.toString().padStart(2, '0')}:${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`,
+      selector: (row) => {
+        if (row.type === "Yield") {
+          return `${dysYield.toString().padStart(2, '0')}:${hrsYield.toString().padStart(2, '0')}:${minsYield.toString().padStart(2, '0')}:${secsYield.toString().padStart(2, '0')}`;
+        } else if (row.type === "Full") {
+          return `${dysFull.toString().padStart(2, '0')}:${hrsFull.toString().padStart(2, '0')}:${minsFull.toString().padStart(2, '0')}:${secsFull.toString().padStart(2, '0')}`;
+        } else {
+          return '';
+        }
+      },
       sortable: true,
       style: {
         div: {
@@ -1205,7 +1269,15 @@ function BuyTugDataTable() {
     },
     {
       name: 'Current multiplier',
-      selector: () => `${curMultiplier?.toFixed(2)}x`,
+      selector: (row) => {
+        if (row.type === "Yield") {
+          return `${yieldMultiplier?.toFixed(2)}x`;
+        } else if (row.type === "Full") {
+          return `${fullMultiplier?.toFixed(2)}x`;
+        } else {
+          return '';
+        }
+      },
       sortable: true,
     },
     {
