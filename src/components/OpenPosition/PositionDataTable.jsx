@@ -661,13 +661,13 @@ function ButTugModal(props) {
                 </div>
                 <div className="buy-div">
                   <div className="modal-buy-app-buttons">
-                    {BigNumber(approvedAmount) < BigNumber(amount) && (
+                    {Number(approvedAmount) < Number(amount * 10**18) && (
                     <button type="button" onClick={onApprove}>
                       Approve
                     </button>
                     )}
 
-                    {BigNumber(approvedAmount) >= BigNumber(amount) && (
+                    {Number(approvedAmount) >= Number(amount * 10**18) && (
                     <button type="button" onClick={SuccessTug}>
                       BUY
                     </button>

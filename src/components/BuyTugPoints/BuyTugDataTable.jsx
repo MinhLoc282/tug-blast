@@ -659,7 +659,7 @@ function ButTugModal(props) {
                   <div className="loading-content">
                     <div>Waiting For Confirmation</div>
 
-                    {BigNumber(approvedAmount) ? <div>{`Swapping ${parseFloat(amount)} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
+                    {Number(approvedAmount) ? <div>{`Swapping ${parseFloat(amount)} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
 
                     <div>Confirm this transaction in your wallet</div>
                   </div>
@@ -736,7 +736,7 @@ function ButTugModal(props) {
                   </div>
                   <div className="buy-div">
                     <div className="modal-buy-app-buttons">
-                      {BigNumber(approvedAmount) < BigNumber(amount) && (
+                      {Number(approvedAmount) < Number(amount * 10**18) && (
                       <button
                         type="button"
                         onClick={onApprove}
@@ -745,7 +745,7 @@ function ButTugModal(props) {
                       </button>
                       )}
 
-                      {BigNumber(approvedAmount) >= BigNumber(amount) && (
+                      {Number(approvedAmount) >= Number(amount * 10**18) && (
                       <button
                         type="button"
                         onClick={SuccessTug}
