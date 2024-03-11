@@ -23,7 +23,7 @@ import gldLogo from '../../assets/images/gld.png';
 import { FAKE_DATA } from '../../backend/fakeApi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
 import {
-  PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_ETH_BTC,
+  PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL,
 } from '../../constant';
 import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import { useWeb3Signer } from '../../hooks/ethersHooks';
@@ -254,6 +254,37 @@ const claimAll = async (claimList, account, web3) => {
             value: updateFee1,
           });
       // eslint-disable-next-line brace-style
+      } else if (claim.pairId === TUGPAIR_ETH_BTC_FULL && claim.epochNumber.length !== 0) {
+        const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
+
+        // ETH - BTC
+        const priceIds1 = [
+          // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
+          '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace', // ETH/USD price id in testnet
+          '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
+        ];
+
+        // In order to use Pyth prices in your protocol you need to
+        // submit the price update data to Pyth contract in your target
+        // chain. `getPriceFeedsUpdateData` creates the update data
+        // which can be submitted to your contract. Then your contract should
+        // call the Pyth Contract with this data.
+
+        // ETH - BTC
+        const priceUpdateData1 = await connectionEVM.getPriceFeedsUpdateData(priceIds1);
+
+        // ETH - BTC
+        const updateFee1 = await pythEvmContact.methods
+          .getUpdateFee(priceUpdateData1)
+          .call();
+
+        await ContractTugPair.methods
+          .collectWinnings(claim.epochNumber, priceUpdateData1)
+          .send({
+            from: account,
+            value: updateFee1,
+          });
+      // eslint-disable-next-line brace-style
       }
       // else if (claimList[i].pairId === TUGPAIR_ETH_MSFT
       // && claimList[i].epochNumber.length !== 0) {
@@ -268,6 +299,28 @@ const claimAll = async (claimList, account, web3) => {
       // }
       else if (claim.pairId === TUGPAIR_BTC_XAU && claim.epochNumber.length !== 0) {
         const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU);
+        // BTC - XAU
+        const priceIds3 = [
+          '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
+          '0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2', // GOLD/USD price id in testnet
+        ];
+
+        // BTC - XAU
+        const priceUpdateData3 = await connectionEVM.getPriceFeedsUpdateData(priceIds3);
+
+        // BTC - XAU
+        const updateFee3 = await pythEvmContact.methods
+          .getUpdateFee(priceUpdateData3)
+          .call();
+
+        await ContractTugPair.methods
+          .collectWinnings(claim.epochNumber, priceUpdateData3)
+          .send({
+            from: account,
+            value: updateFee3,
+          });
+      } else if (claim.pairId === TUGPAIR_BTC_XAU_FULL && claim.epochNumber.length !== 0) {
+        const ContractTugPair = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
         // BTC - XAU
         const priceIds3 = [
           '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43', // BTC/USD price id in testnet
