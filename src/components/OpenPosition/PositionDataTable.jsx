@@ -188,15 +188,15 @@ function ButTugModal(props) {
       let apAmount;
 
       if (symbols[0] === 'ETH' && symbols[1] === 'BTC') {
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
-        const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+        const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
 
         apAmount = await tokenContact.methods.allowance(address, selectedTugId).call();
       }
@@ -214,7 +214,7 @@ function ButTugModal(props) {
     const getBalance = async () => {
       try {
         if (address) {
-          const tokenContact = new web3.eth.Contract(TOKEN_ABI, '0x4200000000000000000000000000000000000023');
+          const tokenContact = new web3.eth.Contract(TOKEN_ABI, TOKEN_ADDRESS);
           const newBalance = await tokenContact.methods.balanceOf(address).call();
           const balanceToWei = web3.utils.fromWei(newBalance);
           const roundBalance = Math.round(Number(balanceToWei) * 1000) / 1000;
