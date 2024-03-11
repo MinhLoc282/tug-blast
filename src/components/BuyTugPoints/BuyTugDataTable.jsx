@@ -981,17 +981,19 @@ function BuyTugDataTable() {
         let currentPayoffB = 0;
 
         if (pair.type === 'Yield') {
-          const payoffs = calculateCurrentPayoffs(totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
+          const payoffs = calculateCurrentPayoffs(tugDuration, totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
           currentPayoffA = payoffs.currentPayoffA;
           currentPayoffB = payoffs.currentPayoffB;
         } else {
-          currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
-            / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
-            * parseFloat(sharesForOneDai0)) || 0;
+          // currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
+          //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
+          //   * parseFloat(sharesForOneDai0)) || 0;
+          currentPayoffA = 0;
 
-          currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
-            / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
-            * parseFloat(sharesForOneDai1)) || 0;
+          // currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
+          //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
+          //   * parseFloat(sharesForOneDai1)) || 0;
+          currentPayoffB = 0;
         }
 
         let tokenADeposit = (parseFloat(totalToken0Shares)
@@ -1015,13 +1017,13 @@ function BuyTugDataTable() {
         const colorFlag = parseFloat(tokenAprice) >= parseFloat(tokenBprice);
 
         accumulator.push({
-            currentPayoffA,
-            currentPayoffB,
+            currentPayoffA: parseFloat(web3.utils.fromWei(currentPayoffA.toString(), 'ether')),
+            currentPayoffB: parseFloat(web3.utils.fromWei(currentPayoffB.toString(), 'ether')),
             TOKEN0currentPrice,
             TOKEN1currentPrice,
             totalToken0Shares,
             totalToken1Shares,
-            totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'gwei'),
+            totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'ether'),
             no: index + 1,
             type: pair.type,
             id: pair.id,
@@ -1265,7 +1267,7 @@ function BuyTugDataTable() {
       sortable: true,
     },
     {
-      name: 'WETH Total Pool Size (in gwei)',
+      name: 'WETH Total Pool Size (in ether)',
       selector: (row) => (
         <span>{`${row.totalPoolSize}`}</span>
       ),
@@ -1275,7 +1277,7 @@ function BuyTugDataTable() {
       name: 'Current payoff per WETH (A wins/B wins)',
       selector: (row) => (
         <span style={{ color: '#9584FF' }}>
-          {`${row.currentPayoffA.toFixed(2)}/${row.currentPayoffB.toFixed(2)}`}
+          {`${row.currentPayoffA.toFixed(4)}/${row.currentPayoffB.toFixed(4)}`}
         </span>
       ),
       sortable: true,

@@ -23,9 +23,8 @@ import gldLogo from '../../assets/images/gld.png';
 import { FAKE_DATA } from '../../backend/fakeApi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
 import {
-  PYTH_CONTACT_ADDRESS, TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL,
+  PYTH_CONTACT_ADDRESS, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL,
 } from '../../constant';
-import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import { useWeb3Signer } from '../../hooks/ethersHooks';
 
 const getSuccessData = async (totaldata) => {

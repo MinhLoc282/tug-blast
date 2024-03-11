@@ -817,18 +817,30 @@ function PositionDataTable() {
           token1SharesHeld = 0;
         }
 
-        const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'gwei');
-        const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'gwei');
+        const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'ether');
+        const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'ether');
 
         // John this is the right one
-        const currentPayoffAWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
-        / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
-        const currentPayoffBWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
-        / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
-        const currentPayoffALose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
-        / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
-        const currentPayoffBLose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
-        / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
+        let currentPayoffAWin = 0;
+        let currentPayoffBWin = 0;
+        let currentPayoffALose = 0;
+        let currentPayoffBLose = 0;
+
+        if (pair.type === 'Yield') {
+          currentPayoffAWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
+          / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
+          currentPayoffBWin = (((parseFloat(totalPoolSize) * (0.79) * (0.04) * parseFloat(pair.tugDuration / 86400))
+          / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
+          currentPayoffALose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
+          / (parseFloat(totalToken0Shares))) * parseFloat(token0SharesHeld)) || 0;
+          currentPayoffBLose = (((parseFloat(totalPoolSize) * (0.2) * (0.04) * parseFloat(pair.tugDuration / 86400))
+          / (parseFloat(totalToken1Shares))) * parseFloat(token1SharesHeld)) || 0;
+        } else {
+          currentPayoffAWin = 0;
+          currentPayoffBWin = 0;
+          currentPayoffALose = 0;
+          currentPayoffBLose = 0;
+        }
         //-------------
         // default
         let token1Symbol;
@@ -873,19 +885,19 @@ function PositionDataTable() {
 
         accumulator.push({
           checkTotal: 0,
-          token0SharesHeld,
-          token1SharesHeld,
+          token0SharesHeld: parseFloat(web3.utils.fromWei(token0SharesHeld.toString(), 'ether')),
+          token1SharesHeld: parseFloat(web3.utils.fromWei(token1SharesHeld.toString(), 'ether')),
           token0CostBasis,
           token1CostBasis,
-          currentPayoffAWin: parseFloat(web3.utils.fromWei(currentPayoffAWin.toString(), 'gwei')),
-          currentPayoffALose: parseFloat(web3.utils.fromWei(currentPayoffALose.toString(), 'gwei')),
-          currentPayoffBWin: parseFloat(web3.utils.fromWei(currentPayoffBWin.toString(), 'gwei')),
-          currentPayoffBLose: parseFloat(web3.utils.fromWei(currentPayoffBLose.toString(), 'gwei')),
+          currentPayoffAWin: parseFloat(web3.utils.fromWei(currentPayoffAWin.toString(), 'ether')),
+          currentPayoffALose: parseFloat(web3.utils.fromWei(currentPayoffALose.toString(), 'ether')),
+          currentPayoffBWin: parseFloat(web3.utils.fromWei(currentPayoffBWin.toString(), 'ether')),
+          currentPayoffBLose: parseFloat(web3.utils.fromWei(currentPayoffBLose.toString(), 'ether')),
           TOKEN0currentPrice,
           TOKEN1currentPrice,
           totalToken0Shares,
           totalToken1Shares,
-          totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'gwei'),
+          totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'ether'),
           no: index + 1,
           type: pair.type,
           id: pair.id,
@@ -907,6 +919,7 @@ function PositionDataTable() {
       let totalCostBasis = 0;
       let totalWinPayOff = 0;
       let totalLosePayOff = 0;
+      let totalSharesHeld = 0;
 
       // totalData = await totalData.map((item) => {
       //   if (item.token0CostBasis === undefined) {
@@ -954,6 +967,8 @@ function PositionDataTable() {
         newItem.currentPayoffBWin = newItem.currentPayoffBWin || 0;
         newItem.currentPayoffALose = newItem.currentPayoffALose || 0;
         newItem.currentPayoffBLose = newItem.currentPayoffBLose || 0;
+        newItem.totalToken0Shares = newItem.totalToken0Shares || 0;
+        newItem.totalToken1Shares = newItem.totalToken0Shares || 0;
 
         // Update totalCostBasis, totalWinPayOff, and totalLosePayOff
         totalCostBasis += parseFloat(newItem.token0CostBasis)
@@ -962,6 +977,8 @@ function PositionDataTable() {
         + parseFloat(newItem.currentPayoffBWin);
         totalLosePayOff += parseFloat(newItem.currentPayoffALose)
         + parseFloat(newItem.currentPayoffBLose);
+        totalSharesHeld += parseFloat(newItem.totalToken0Shares)
+        + parseFloat(newItem.totalToken1Shares)
 
         // Find the corresponding data in pairsArry2
         const isDataExist = pairsArry2.find((o) => o.id === newItem.id);
@@ -981,7 +998,7 @@ function PositionDataTable() {
       }
 
       const totalItem = {
-        checkTotal: 1, totalCostBasis, totalWinPayOff, totalLosePayOff,
+        checkTotal: 1, totalCostBasis, totalWinPayOff, totalLosePayOff, totalSharesHeld,
       };
       totalData = [...updatedTotalData, totalItem];
 
@@ -1123,21 +1140,25 @@ function PositionDataTable() {
           return (
             <ul className="sharesHeld">
               <li>
-                {row.token0SharesHeld ? row.token0SharesHeld : '-'}
+                {row.token0SharesHeld ? row.token0SharesHeld.toFixed(4) : '-'}
               </li>
               <li>
-                {row.token1SharesHeld ? row.token1SharesHeld : '-'}
+                {row.token1SharesHeld ? row.token1SharesHeld.toFixed(4) : '-'}
               </li>
             </ul>
           );
         }
 
-        return '';
+        return (
+          <p className="totalPairtStyle">
+            {row.totalCostBasis}
+          </p>
+        );
       },
       sortable: true,
     },
     {
-      name: 'WETH Cost Basis (in gwei)',
+      name: 'WETH Cost Basis (in ether)',
       sortable: true,
       selector: (row) => row.totalCostBasis,
       cell: (row) => {
@@ -1176,13 +1197,13 @@ function PositionDataTable() {
               <li hidden={!row.token0SharesHeld} className="payOffAB">
                 <span className="payOffA">
                   {' '}
-                  {row.currentPayoffAWin.toFixed(2)}
+                  {row.currentPayoffAWin.toFixed(4)}
                   /
                   {' '}
                 </span>
                 <span className="payOffB">
                   {' '}
-                  {row.currentPayoffALose.toFixed(2)}
+                  {row.currentPayoffALose.toFixed(4)}
                 </span>
               </li>
 
@@ -1192,13 +1213,13 @@ function PositionDataTable() {
               <li hidden={!row.token1SharesHeld} className="payOffAB">
                 <span className="payOffA">
                   {' '}
-                  {row.currentPayoffBWin.toFixed(2)}
+                  {row.currentPayoffBWin.toFixed(4)}
                   /
                   {' '}
                 </span>
                 <span className="payOffB">
                   {' '}
-                  {row.currentPayoffBLose.toFixed(2)}
+                  {row.currentPayoffBLose.toFixed(4)}
                 </span>
               </li>
             </ul>
@@ -1208,11 +1229,11 @@ function PositionDataTable() {
         return (
           <p className="totalPayOffAB">
             <span className="payOffA">
-              {row.totalWinPayOff.toFixed(2)}
+              {row.totalWinPayOff.toFixed(4)}
               /
             </span>
             <span className="payOffB">
-              {row.totalLosePayOff.toFixed(2)}
+              {row.totalLosePayOff.toFixed(4)}
             </span>
           </p>
         );
