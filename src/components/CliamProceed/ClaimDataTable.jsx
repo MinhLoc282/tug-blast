@@ -35,18 +35,38 @@ const getSuccessData = async (totaldata) => {
     let bgoldShares = 0;
     let ebPOff = 0;
     let bgPOff = 0;
+    let ethbFullShares = 0;
+    let ebtcFullShares = 0;
+    let btcgFullShares = 0;
+    let bgoldFullShares = 0;
+    let ebFullPOff = 0;
+    let bgFullPOff = 0;
     let totalPayOff = 0;
 
     for (let i = 0; i < totaldata.length; i += 1) {
       if (totaldata[i].checkTotal === 0 && totaldata[i].myPayOff !== '' && totaldata[i].status === 'Not Claimed') {
         if (totaldata[i].token0Symbol === 'ETH' && totaldata[i].token1Symbol === 'BTC') {
-          ethbShares += parseFloat(totaldata[i].token0SharesHeld);
-          ebtcShares += parseFloat(totaldata[i].token1SharesHeld);
-          ebPOff += parseFloat(totaldata[i].myPayOff);
+          if (totaldata[i].type === 'Yield') {
+            ethbShares += parseFloat(totaldata[i].token0SharesHeld);
+            ebtcShares += parseFloat(totaldata[i].token1SharesHeld);
+            ebPOff += parseFloat(totaldata[i].myPayOff);
+          } else {
+            ethbFullShares += parseFloat(totaldata[i].token0SharesHeld);
+            ebtcFullShares += parseFloat(totaldata[i].token1SharesHeld);
+            ebFullPOff += parseFloat(totaldata[i].myPayOff);
+          }
+
         } else if (totaldata[i].token0Symbol === 'BTC' && totaldata[i].token1Symbol === 'GOLD') {
-          btcgShares += parseFloat(totaldata[i].token0SharesHeld);
-          bgoldShares += parseFloat(totaldata[i].token1SharesHeld);
-          bgPOff += parseFloat(totaldata[i].myPayOff);
+          if (totaldata[i].type === 'Yield') {
+            btcgShares += parseFloat(totaldata[i].token0SharesHeld);
+            bgoldShares += parseFloat(totaldata[i].token1SharesHeld);
+            bgPOff += parseFloat(totaldata[i].myPayOff);
+          } else {
+            btcgFullShares += parseFloat(totaldata[i].token0SharesHeld);
+            bgoldFullShares += parseFloat(totaldata[i].token1SharesHeld);
+            bgFullPOff += parseFloat(totaldata[i].myPayOff);
+          }
+
         }
       }
 
@@ -56,7 +76,9 @@ const getSuccessData = async (totaldata) => {
     }
 
     const tData = {
-      ethbShares, ebtcShares, ebPOff, btcgShares, bgoldShares, bgPOff, totalPayOff,
+      ethbShares, ebtcShares, ebPOff, btcgShares, bgoldShares, bgPOff,
+      ethbFullShares, ebtcFullShares, ebFullPOff, btcgFullShares, bgoldFullShares, bgFullPOff,
+      totalPayOff,
     };
     return tData;
   } catch (e) {
@@ -72,7 +94,10 @@ const getSuccessData = async (totaldata) => {
 function TugClaimSuccesModal(props) {
   const {
     show, onHide, btcgshare, bgoldshare,
-    bgpayoff, ethbshare, ebtcshare, ebpayoff, totalclaimpayoff, setPageLoad,
+    bgpayoff, ethbshare, ebtcshare, ebpayoff,
+    btcgFullshare, bgoldFullshare,
+    bgFullpayoff, ethbFullshare, ebtcFullshare, ebFullpayoff,
+    totalclaimpayoff, setPageLoad,
   } = props;
 
   return (
@@ -106,18 +131,18 @@ function TugClaimSuccesModal(props) {
             {' '}
             <span className="climsml">
               <br />
-              {ethbshare}
+              {ethbshare + ethbFullshare}
               {' '}
               ETH shares &
               {' '}
-              {ebtcshare}
+              {ebtcshare + ebtcFullshare}
               {' '}
               BTC shares
             </span>
             <br />
             {' for '}
             <span className="smal-blu">
-              {ebpayoff}
+              {ebpayoff + ebFullpayoff}
               {' '}
               WETH
             </span>
@@ -129,18 +154,18 @@ function TugClaimSuccesModal(props) {
             {' '}
             <span className="climsml">
               <br />
-              {btcgshare}
+              {btcgshare + btcgFullshare}
               {' '}
               BTC shares &
               {' '}
-              {bgoldshare}
+              {bgoldshare + bgoldFullshare}
               {' '}
               GOLD shares
             </span>
             <br />
             {' for '}
             <span className="smal-blu">
-              {bgpayoff}
+              {bgpayoff + bgFullpayoff}
               {' '}
               WETH
             </span>
@@ -350,11 +375,13 @@ const claimAll = async (claimList, account, web3) => {
       autoClose: 2000,
     });
     // show success modal
+    return true;
   } catch (e) {
     toast.error('Operation failed', {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
     });
+    return false;
   }
 };
 
@@ -377,6 +404,12 @@ function ClaimProceedDataTable() {
   const [ethbshare, setEthBshare] = React.useState(0);
   const [btcgshare, setBtcGshare] = React.useState(0);
   const [bgpayoff, setbgpayoff] = React.useState(0);
+  const [ebtcFullshare, setEBtcFullshare] = React.useState(0);
+  const [bgoldFullshare, setBGoldFullshare] = React.useState(0);
+  const [ebFullpayoff, setEBFullpayoff] = React.useState(0);
+  const [ethbFullshare, setEthBFullshare] = React.useState(0);
+  const [btcgFullshare, setBtcGFullshare] = React.useState(0);
+  const [bgFullpayoff, setbgFullpayoff] = React.useState(0);
   const [totalpayoff, setTotalpayoff] = React.useState(0);
   const [totalclaimpayoff, setTotalClaimPayOff] = React.useState(0);
   const [claimdatalist, setClaimdatalist] = React.useState([]);
@@ -499,6 +532,12 @@ function ClaimProceedDataTable() {
       setBtcGshare(sData.btcgShares);
       setBGoldshare(sData.bgoldShares);
       setbgpayoff(sData.bgPOff);
+      setEthBFullshare(sData.ethbFullShares);
+      setEBtcFullshare(sData.ebtcFullShares);
+      setEBFullpayoff(sData.ebFullPOff);
+      setBtcGFullshare(sData.btcgFullShares);
+      setBGoldFullshare(sData.bgoldFullShares);
+      setbgFullpayoff(sData.bgFullPOff);
       setTotalpayoff(sData.totalPayOff);
       setTotalClaimPayOff(totalClaimPO);
       setSucdata(sData);
@@ -749,6 +788,7 @@ function ClaimProceedDataTable() {
             id="claimAll"
             onClick={() => {
               claimAll(claimdatalist, address, web3).then((result) => {
+                console.log(result);
                 if (result) {
                   setModalShow(true);
                 }
@@ -842,6 +882,12 @@ function ClaimProceedDataTable() {
             btcgshare={btcgshare}
             bgpayoff={bgpayoff}
             ebpayoff={ebpayoff}
+            ebtcFullshare={ebtcFullshare}
+            bgoldFullshare={bgoldFullshare}
+            ethbFullshare={ethbFullshare}
+            btcgFullshare={btcgFullshare}
+            bgFullpayoff={bgFullpayoff}
+            ebFullpayoff={ebFullpayoff}
             totalpayoff={totalpayoff}
             totalclaimpayoff={totalclaimpayoff}
             setPageLoad={setPageLoad}
