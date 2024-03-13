@@ -982,21 +982,21 @@ function BuyTugDataTable() {
         let currentPayoffA = 0;
         let currentPayoffB = 0;
 
-        if (pair.type === 'Yield') {
-          const payoffs = calculateCurrentPayoffs(tugDuration, totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
-          currentPayoffA = payoffs.currentPayoffA;
-          currentPayoffB = payoffs.currentPayoffB;
-        } else {
-          // currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
-          //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
-          //   * parseFloat(sharesForOneDai0)) || 0;
-          currentPayoffA = 0;
+        // if (pair.type === 'Yield') {
+        //   const payoffs = calculateCurrentPayoffs(tugDuration, totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
+        //   currentPayoffA = payoffs.currentPayoffA;
+        //   currentPayoffB = payoffs.currentPayoffB;
+        // } else {
+        //   // currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
+        //   //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
+        //   //   * parseFloat(sharesForOneDai0)) || 0;
+        //   currentPayoffA = 0;
 
-          // currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
-          //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
-          //   * parseFloat(sharesForOneDai1)) || 0;
-          currentPayoffB = 0;
-        }
+        //   // currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
+        //   //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
+        //   //   * parseFloat(sharesForOneDai1)) || 0;
+        //   currentPayoffB = 0;
+        // }
 
         let tokenADeposit = (parseFloat(totalToken0Shares)
             / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
@@ -1019,8 +1019,8 @@ function BuyTugDataTable() {
         const colorFlag = parseFloat(tokenAprice) >= parseFloat(tokenBprice);
 
         accumulator.push({
-            currentPayoffA: parseFloat(web3.utils.fromWei(currentPayoffA.toString(), 'ether')),
-            currentPayoffB: parseFloat(web3.utils.fromWei(currentPayoffB.toString(), 'ether')),
+            currentPayoffA,
+            currentPayoffB,
             TOKEN0currentPrice,
             TOKEN1currentPrice,
             totalToken0Shares,
