@@ -272,13 +272,13 @@ function ButTugModal(props) {
         tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
       }
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       let tugPairContact
       if (selectedTugId === TUGPAIR_BTC_XAU) {
@@ -287,8 +287,8 @@ function ButTugModal(props) {
         tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
       }
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
@@ -516,7 +516,7 @@ function ButTugModal(props) {
                             setDropdownTitle(`${symbols[0]} Side`);
                           }
                         }}
-                        className="token-val"
+                        className={`token-val${sideS === 0 ? ' selected' : ''}`}
                       >
                         {symbols[0] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
@@ -544,7 +544,7 @@ function ButTugModal(props) {
                             setDropdownTitle(`${symbols[1]} Side`);
                           }
                         }}
-                        className="token-val"
+                        className={`token-val${sideS === 1 ? ' selected' : ''}`}
                       >
                         {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[1] === 'GOLD' && (
@@ -637,7 +637,7 @@ function ButTugModal(props) {
                   <div className="amount-dai select-token">
                     <Row className="w-100">
                       <Col xs={6}>
-                        <p>Amount(ether)</p>
+                        <p>Amount (WETH)</p>
 
                         <input
                           className="buy-amount-input"
@@ -682,7 +682,7 @@ function ButTugModal(props) {
                       <Col xs={6}>
                         <p>Number of Shares</p>
 
-                        {typeof noOfShares === 'number' ? <h1>{noOfShares}</h1> : (
+                        {typeof noOfShares === 'number' ? <h1>{noOfShares.toFixed(3)}</h1> : (
                           <small className="per-dair d-block w-100">
                             {noOfShares}
                           </small>
@@ -701,23 +701,25 @@ function ButTugModal(props) {
                   </div>
                   <div className="buy-div">
                     <div className="modal-buy-app-buttons">
-                      {Number(approvedAmount) < Number(amount * 10**18) && (
+                    {new BigNumber(approvedAmount).comparedTo(new BigNumber(amount).times(new BigNumber(10).pow(18))) < 0 && (
                       <button
                         type="button"
                         onClick={onApprove}
+                        className="purple"
                       >
                         Approve
                       </button>
-                      )}
+                    )}
 
-                      {Number(approvedAmount) >= Number(amount * 10**18) && (
+                    {new BigNumber(approvedAmount).comparedTo(new BigNumber(amount).times(new BigNumber(10).pow(18))) >= 0 && (
                       <button
                         type="button"
                         onClick={SuccessTug}
+                        className="green"
                       >
                         BUY
                       </button>
-                      )}
+                    )}
                     </div>
                   </div>
                 </>
@@ -1025,6 +1027,7 @@ function BuyTugDataTable() {
             totalToken1Shares,
             totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'ether'),
             no: index + 1,
+            currentEpoch,
             type: pair.type,
             id: pair.id,
             timeToExpiry,
@@ -1142,6 +1145,11 @@ function BuyTugDataTable() {
       sortable: true,
     },
     {
+      name: 'Current Epoch',
+      selector: (row) => row.currentEpoch,
+      sortable: true,
+    },
+    {
       name: 'Tug Pair Token A/Token B',
       selector: (row) => row.pair,
       cell: (row) => {
@@ -1205,7 +1213,7 @@ function BuyTugDataTable() {
     },
 
     {
-      name: 'Time to expiry DD:HH:MM:SS',
+      name: 'Time Left DD:HH:MM:SS',
       selector: (row) => {
         if (row.type === "Yield") {
           return `${dysYield.toString().padStart(2, '0')}:${hrsYield.toString().padStart(2, '0')}:${minsYield.toString().padStart(2, '0')}:${secsYield.toString().padStart(2, '0')}`;
@@ -1223,7 +1231,7 @@ function BuyTugDataTable() {
       },
     },
     {
-      name: 'Current multiplier',
+      name: 'Current Multiplier',
       selector: (row) => {
         if (row.type === "Yield") {
           return `${yieldMultiplier?.toFixed(2)}x`;

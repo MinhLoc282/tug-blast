@@ -39,12 +39,12 @@ function StakeTugDataTable() {
       ),
     },
     {
-      name: 'Time to expiry DD:HH:MM:SS',
+      name: 'Time Left DD:HH:MM:SS',
       selector: (row) => row.pair,
       omit: hideDirector,
     },
     {
-      name: 'Current multiplier',
+      name: 'Current Multiplier',
       selector: (row) => row.current,
       omit: hideDirector,
     },

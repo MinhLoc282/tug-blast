@@ -17,6 +17,7 @@ import debounce from 'lodash/debounce';
 import moment from 'moment';
 import { PythHttpClient } from '@pythnetwork/client';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { BigNumber } from 'bignumber.js';
 import { EvmPriceServiceConnection } from '@pythnetwork/pyth-evm-js';
 import IPythAbi from '@pythnetwork/pyth-sdk-solidity/abis/IPyth.json';
 import { useAccount } from 'wagmi';
@@ -265,13 +266,13 @@ function ButTugModal(props) {
         tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_BTC_FULL);
       }
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'ETH' && symbols[1] === 'MSFT') {
       const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_ETH_MSFT);
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     } else if (symbols[0] === 'BTC' && symbols[1] === 'GOLD') {
       let tugPairContact
       if (selectedTugId === TUGPAIR_BTC_XAU) {
@@ -280,8 +281,8 @@ function ButTugModal(props) {
         tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, TUGPAIR_BTC_XAU_FULL);
       }
 
-      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 0).call();
-      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei, 1).call();
+      sharesA = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 0).call();
+      sharesB = await tugPairContact.methods.getQtyOfSharesToIssue(numberInWei.toString(), 1).call();
     }
 
     setnoOfShares(parseFloat(sideS === 0 ? web3.utils.fromWei(sharesA, 'ether') : web3.utils.fromWei(sharesB, 'ether')));
@@ -489,7 +490,7 @@ function ButTugModal(props) {
                             setDropdownTitle(`${symbols[0]} Side`);
                           }
                         }}
-                        className="token-val"
+                        className={`token-val${sideS === 0 ? ' selected' : ''}`}
                       >
                         {symbols[0] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[0] === 'ETH' && <ETHIcon width="25px" className="me-2 ethr" />}
@@ -517,7 +518,7 @@ function ButTugModal(props) {
                             setDropdownTitle(`${symbols[1]} Side`);
                           }
                         }}
-                        className="token-val"
+                        className={`token-val${sideS === 1 ? ' selected' : ''}`}
                       >
                         {symbols[1] === 'BTC' && <BTCIcon width="25px" height="32px" className="me-2 ethr" />}
                         {symbols[1] === 'GOLD' && (
@@ -569,7 +570,7 @@ function ButTugModal(props) {
                 <div className="amount-dai select-token">
                   <Row className="w-100">
                     <Col xs={6}>
-                      <p>Amount(ether)</p>
+                      <p>Amount (WETH)</p>
                       <input
                         className="buy-amount-input"
                         value={amount}
@@ -607,7 +608,7 @@ function ButTugModal(props) {
                   <Row className="w-100">
                     <Col xs={6}>
                       <p>Number of Shares</p>
-                      {typeof noOfShares === 'number' ? <h1>{noOfShares}</h1> : (
+                      {typeof noOfShares === 'number' ? <h1>{noOfShares.toFixed(3)}</h1> : (
                         <small className="per-dair d-block w-100">
                           {noOfShares}
                         </small>
@@ -625,16 +626,24 @@ function ButTugModal(props) {
                 </div>
                 <div className="buy-div">
                   <div className="modal-buy-app-buttons">
-                    {Number(approvedAmount) < Number(amount * 10**18) && (
-                    <button type="button" onClick={onApprove}>
-                      Approve
-                    </button>
+                  {new BigNumber(approvedAmount).comparedTo(new BigNumber(amount).times(new BigNumber(10).pow(18))) < 0 && (
+                      <button
+                        type="button"
+                        onClick={onApprove}
+                        className="purple"
+                      >
+                        Approve
+                      </button>
                     )}
 
-                    {Number(approvedAmount) >= Number(amount * 10**18) && (
-                    <button type="button" onClick={SuccessTug}>
-                      BUY
-                    </button>
+                    {new BigNumber(approvedAmount).comparedTo(new BigNumber(amount).times(new BigNumber(10).pow(18))) >= 0 && (
+                      <button
+                        type="button"
+                        onClick={SuccessTug}
+                        className="green"
+                      >
+                        BUY
+                      </button>
                     )}
                   </div>
                 </div>
@@ -776,6 +785,10 @@ function PositionDataTable() {
         const currentTimeinEpochSeconds = Math.round(Date.now() / 1000);
 
         const currentEpoch = await tugPairContact.methods.currentEpoch().call();
+
+        if (currentEpoch !== currentUserEpoch.latestEpoch) {
+          return accumulatorPromise;
+        }
 
         let result222 = tugDuration - ((currentTimeinEpochSeconds - startTime) % tugDuration);
 
@@ -967,8 +980,8 @@ function PositionDataTable() {
         newItem.currentPayoffBWin = newItem.currentPayoffBWin || 0;
         newItem.currentPayoffALose = newItem.currentPayoffALose || 0;
         newItem.currentPayoffBLose = newItem.currentPayoffBLose || 0;
-        newItem.totalToken0Shares = newItem.totalToken0Shares || 0;
-        newItem.totalToken1Shares = newItem.totalToken0Shares || 0;
+        newItem.token0SharesHeld = newItem.token0SharesHeld || 0;
+        newItem.token1SharesHeld = newItem.token1SharesHeld || 0;
 
         // Update totalCostBasis, totalWinPayOff, and totalLosePayOff
         totalCostBasis += parseFloat(newItem.token0CostBasis)
@@ -977,8 +990,8 @@ function PositionDataTable() {
         + parseFloat(newItem.currentPayoffBWin);
         totalLosePayOff += parseFloat(newItem.currentPayoffALose)
         + parseFloat(newItem.currentPayoffBLose);
-        totalSharesHeld += parseFloat(newItem.totalToken0Shares)
-        + parseFloat(newItem.totalToken1Shares)
+        totalSharesHeld += parseFloat(newItem.token0SharesHeld)
+        + parseFloat(newItem.token1SharesHeld)
 
         // Find the corresponding data in pairsArry2
         const isDataExist = pairsArry2.find((o) => o.id === newItem.id);
@@ -1041,7 +1054,7 @@ function PositionDataTable() {
       sortable: true,
     },
     {
-      name: 'Time to expiry DD:HH:MM:SS',
+      name: 'Time Left DD:HH:MM:SS',
       selector: (row) => {
         if (row.type === "Yield") {
           return `${dysYield.toString().padStart(2, '0')}:${hrsYield.toString().padStart(2, '0')}:${minsYield.toString().padStart(2, '0')}:${secsYield.toString().padStart(2, '0')}`;
@@ -1140,10 +1153,10 @@ function PositionDataTable() {
           return (
             <ul className="sharesHeld">
               <li>
-                {row.token0SharesHeld ? row.token0SharesHeld.toFixed(4) : '-'}
+                {row.token0SharesHeld ? row.token0SharesHeld.toFixed(3) : '-'}
               </li>
               <li>
-                {row.token1SharesHeld ? row.token1SharesHeld.toFixed(4) : '-'}
+                {row.token1SharesHeld ? row.token1SharesHeld.toFixed(3) : '-'}
               </li>
             </ul>
           );
@@ -1151,14 +1164,14 @@ function PositionDataTable() {
 
         return (
           <p className="totalPairtStyle">
-            {row.totalCostBasis}
+            {row.totalSharesHeld.toFixed(3)}
           </p>
         );
       },
       sortable: true,
     },
     {
-      name: 'WETH Cost Basis (in ether)',
+      name: 'Cost Basis (WETH)',
       sortable: true,
       selector: (row) => row.totalCostBasis,
       cell: (row) => {

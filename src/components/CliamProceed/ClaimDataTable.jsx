@@ -433,7 +433,7 @@ function ClaimProceedDataTable() {
       const claimList = [];
       const totalClaimPO = 0;
 
-      const promises = pairsArry.map(async (pair) => {
+      const promises = pairsArry.map(async (pair, index) => {
         const tugPairContact = new web3.eth.Contract(TUGPAIR_ABI, pair.id);
         const currentEpoch = await tugPairContact.methods.currentEpoch().call();
 
@@ -494,6 +494,7 @@ function ClaimProceedDataTable() {
             const totalItem = {
               checkTotal: 0,
               epochNumber: epochNum,
+              no: index + 1,
               tugEndDate: tugEndDate.toLocaleDateString(),
               type: pair.type,
               token0SharesHeld,
@@ -582,17 +583,17 @@ function ClaimProceedDataTable() {
 
   const columns = [
     {
-      name: 'Epoch Number',
-      selector: (row) => row.epochNumber,
+      name: 'ID',
+      selector: (row) => row.no,
       sortable: true,
     },
     {
-      name: 'Epoch Number',
+      name: 'Tug Type',
       selector: (row) => row.type,
       sortable: true,
     },
     {
-      name: 'Tug end Date',
+      name: 'Tug Ended',
       selector: (row) => row.tugEndDate,
       sortable: true,
       style: {
@@ -673,10 +674,10 @@ function ClaimProceedDataTable() {
           return (
             <ul className="sharesHeld">
               <li>
-                {row.token0SharesHeld ? row.token0SharesHeld : '-'}
+                {row.token0SharesHeld ? row.token0SharesHeld.toFixed(3) : '-'}
               </li>
               <li>
-                {row.token1SharesHeld ? row.token1SharesHeld : '-'}
+                {row.token1SharesHeld ? row.token1SharesHeld.toFixed(3) : '-'}
               </li>
             </ul>
           );

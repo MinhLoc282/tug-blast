@@ -1217,6 +1217,14 @@ button.buy-btn.close-purple.btn.btn-primary {
   border-radius: 10px;
 }
 
+button.purple {
+  background-color: #9e76fd !important;
+}
+
+button.green {
+  background-color: #84fbc4 !important;
+}
+
 .modal-footer {
   border-top: none !important;
 }
@@ -1500,6 +1508,11 @@ input.form-check-input {
   min-width: 100px !important;
   display: inline-block;
   text-align: center;
+}
+
+.token-val.selected {
+  background-color: #ffdda1 !important;
+  color: black;
 }
 
 .da-blcn {

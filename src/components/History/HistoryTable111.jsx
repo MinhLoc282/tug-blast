@@ -151,7 +151,7 @@ function HistoryDataTable() {
       sortable: true,
     },
     {
-      name: 'Time to expiry DD:HH:MM:SS',
+      name: 'Time Left DD:HH:MM:SS',
       selector: (row) => row.timeToExpiry,
       sortable: true,
       omit: hideDirector,

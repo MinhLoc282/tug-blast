@@ -94,7 +94,7 @@ function BuyTugDataTable() {
       omit: hideDirector,
     },
     {
-      name: 'Time to expiry DD:HH:MM:SS',
+      name: 'Time Left DD:HH:MM:SS',
       selector: (row) => row.expiry,
       sortable: true,
       style: {
@@ -110,7 +110,7 @@ function BuyTugDataTable() {
       omit: hideDirector,
     },
     {
-      name: 'Current multiplier',
+      name: 'Current Multiplier',
       selector: (row) => row.current,
       sortable: true,
       omit: hideDirector,

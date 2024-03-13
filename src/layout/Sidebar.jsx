@@ -59,7 +59,7 @@ function Sidebar(props) {
         </Navbar.Brand>
       </div>
       <Nav as="ul" className="flex-column sidebar-menu pt-4 flex-nowrap">
-        <p className="mt-3 markets">Markets</p>
+        <p className="mt-3 markets">Market</p>
         {sidebarMenu.map((item, i) => (
           <Nav.Item as="li" key={i} className="my-1">
             <Nav.Link
@@ -84,7 +84,7 @@ function Sidebar(props) {
         ))}
         <hr className="my-5 hrmob" />
         <div className="mb-3">
-          <p className="portfolio">Portfolios</p>
+          <p className="portfolio">Portfolio</p>
           {sidebarMenu2.map((item, i) => (
             <Nav.Item as="li" key={i} className="my-1">
               <Nav.Link

@@ -29,12 +29,12 @@ function BuyTugForm() {
         width: 200,
       },
       {
-        label: 'Time to expiry DD:HH:MM:SS',
+        label: 'Time Left DD:HH:MM:SS',
         field: 'office',
         width: 200,
       },
       {
-        label: 'Current multiplier',
+        label: 'Current Multiplier',
         field: 'age',
         sort: 'asc',
         width: 100,
