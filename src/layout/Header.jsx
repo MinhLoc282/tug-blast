@@ -116,10 +116,11 @@ function Header(props) {
               <h4 className="hed-prpl">2 NFTs</h4> */}
               {pending <= 0
                 ? (
-                  <div className="walletAddressInput">
-                    {/* <Form.Control type="text" disabled value={account} onClick={handleClipboard}/> */}
-                    <Form.Control type="text" defaultValue={address || ''} onClick={handleClipboard} />
-                  </div>
+                  address && (
+                    <div className="walletAddressInput">
+                      <Form.Control type="text" defaultValue={address} readOnly onClick={handleClipboard} />
+                    </div>
+                  )
                 )
                 : (
                   <div className="pendingTransaction">
