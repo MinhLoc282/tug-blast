@@ -482,8 +482,8 @@ function ClaimProceedDataTable() {
             const sharedData = await tugPairContact
               .methods.getSharesBalance(epochNum, address).call();
 
-            const token0SharesHeld = web3.utils.fromWei(sharedData.token0Shares.toString(), 'ether');
-            const token1SharesHeld = web3.utils.fromWei(sharedData.token1Shares.toString(), 'ether');
+            const token0SharesHeld = parseFloat(web3.utils.fromWei(sharedData.token0Shares.toString(), 'ether'));
+            const token1SharesHeld = parseFloat(web3.utils.fromWei(sharedData.token1Shares.toString(), 'ether'));
 
             const token0CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositA.toString(), 'ether');
             const token1CostBasis = web3.utils.fromWei(currentUserEpoch.totalDepositB.toString(), 'ether');
