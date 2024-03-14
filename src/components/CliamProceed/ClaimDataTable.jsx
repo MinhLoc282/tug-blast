@@ -495,7 +495,7 @@ function ClaimProceedDataTable() {
               checkTotal: 0,
               epochNumber: epochNum,
               no: index + 1,
-              tugEndDate: tugEndDate.toLocaleDateString(),
+              tugEndDate: tugEndDate.toLocaleString(),
               type: pair.type,
               token0SharesHeld,
               token1SharesHeld,

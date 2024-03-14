@@ -78,7 +78,7 @@ function TokenSuccessModal(props) {
             <Col xs={6}>
               <p className="mb-1">You&apos;ve bought</p>
 
-              <h1 className="mb-0">{localStorage.getItem('buyAmount')}</h1>
+              <h1 className="mb-0">{parseFloat(localStorage.getItem('buyAmount')).toFixed(3)}</h1>
             </Col>
             <Col xs={6} className="text-end">
               <Button className="synth-winstn global-btn">
@@ -172,7 +172,7 @@ function ButTugModal(props) {
   const [amount, setAmount] = useState();
   const [dropdownTitle, setDropdownTitle] = useState('Choose side');
   const [sideS, setsideS] = React.useState(-1);
-  const [noOfShares, setnoOfShares] = React.useState('0');
+  const [noOfShares, setnoOfShares] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
   const [balance, setBalance] = React.useState('5301.78');
   const [approvedAmount, setApprovedAmount] = React.useState('');
@@ -237,7 +237,7 @@ function ButTugModal(props) {
   const getShares = useCallback(async (number) => {
     // return;
     if (number === 0 || number === "0") {
-      setnoOfShares('0');
+      setnoOfShares(0);
       return;
     }
     if (number === undefined || number === null || number === '') { return; }
@@ -389,7 +389,7 @@ function ButTugModal(props) {
       setModalShow(true);
       toast.success(
         <div>
-          <div>{`Bought ${noOfShares} ${symbols[sideS]} side shares`}</div>
+          <div>{`Bought ${noOfShares.toFixed(3)} ${symbols[sideS]} side shares`}</div>
           <div className="link-text">View on Explorer</div>
         </div>,
         {
@@ -640,7 +640,7 @@ function ButTugModal(props) {
                       <button
                         type="button"
                         onClick={SuccessTug}
-                        className="green"
+                        className="purple"
                       >
                         BUY
                       </button>
@@ -912,6 +912,7 @@ function PositionDataTable() {
           totalToken1Shares,
           totalPoolSize: web3.utils.fromWei(totalPoolSize.toString(), 'ether'),
           no: index + 1,
+          currentEpoch,
           type: pair.type,
           id: pair.id,
           timeToExpiry,
@@ -1045,7 +1046,7 @@ function PositionDataTable() {
   const columns = [
     {
       name: 'ID',
-      selector: (row) => row.no,
+      selector: (row) => row.currentEpoch,
       sortable: true,
     },
     {

@@ -40,9 +40,8 @@ import dogeLogo from '../../assets/images/doge.png';
 import {
   CONNECTION, PUBLIC_KEY, PYTH_CONTACT_ADDRESS,
   TOKEN_ADDRESS,
-  TOKEN_REGISTRY, TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL, TUGPAIR_ETH_MSFT,
+  TUGPAIR_BTC_XAU, TUGPAIR_BTC_XAU_FULL, TUGPAIR_ETH_BTC, TUGPAIR_ETH_BTC_FULL, TUGPAIR_ETH_MSFT,
 } from '../../constant';
-import { TOKEN_REGISTRY_ABI } from '../../constant/tokenRegistryAbi';
 import { TUGPAIR_ABI } from '../../constant/tugPairAbi';
 // import { PYTH_ABI } from '../../constant/pythAbi';
 import { TOKEN_ABI } from '../../constant/tokenAbi';
@@ -90,7 +89,7 @@ function TokenSuccessModal(props) {
             <Col xs={6}>
               <p className="mb-1">You&apos;ve bought</p>
 
-              <h1 className="mb-0">{localStorage.getItem('buyAmount')}</h1>
+              <h1 className="mb-0">{parseFloat(localStorage.getItem('buyAmount')).toFixed(3)}</h1>
             </Col>
             <Col xs={6} className="text-end">
               <Button className="synth-winstn global-btn">
@@ -182,7 +181,7 @@ function ButTugModal(props) {
   const [amount, setAmount] = useState(0);
   const [dropdownTitle, setDropdownTitle] = useState('Choose side');
   const [sideS, setsideS] = React.useState(-1);
-  const [noOfShares, setnoOfShares] = React.useState('0');
+  const [noOfShares, setnoOfShares] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
   const [hash, setHash] = React.useState('');
   const [balance, setBalance] = React.useState('5301.78');
@@ -243,7 +242,7 @@ function ButTugModal(props) {
   const getShares = useCallback(async (number) => {
     // return;
     if (number === 0 || number === "0") {
-      setnoOfShares('0');
+      setnoOfShares(0);
       return;
     }
     if (number === undefined || number === null || number === '') { return; }
@@ -404,7 +403,7 @@ function ButTugModal(props) {
 
       toast.success(
         <div>
-          <div>{`Bought ${noOfShares} ${symbols[sideS]} side shares`}</div>
+          <div>{`Bought ${noOfShares.toFixed(3)} ${symbols[sideS]} side shares`}</div>
 
           <div className="link-text">View on Explorer</div>
         </div>,
@@ -626,7 +625,7 @@ function ButTugModal(props) {
                   <div className="loading-content">
                     <div>Waiting For Confirmation</div>
 
-                    {Number(approvedAmount) ? <div>{`Swapping ${parseFloat(amount)} WETH for ${noOfShares} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
+                    {Number(approvedAmount) ? <div>{`Swapping ${parseFloat(amount)} WETH for ${noOfShares.toFixed(3)} of shares for the ${dropdownTitle}`}</div> : 'Approving WETH for Tug Finance'}
 
                     <div>Confirm this transaction in your wallet</div>
                   </div>
@@ -715,7 +714,7 @@ function ButTugModal(props) {
                       <button
                         type="button"
                         onClick={SuccessTug}
-                        className="green"
+                        className="purple"
                       >
                         BUY
                       </button>
@@ -1136,17 +1135,12 @@ function BuyTugDataTable() {
   const columns = [
     {
       name: 'ID',
-      selector: (row) => row.no,
+      selector: (row) => row.currentEpoch,
       sortable: true,
     },
     {
       name: 'Tug Type',
       selector: (row) => row.type,
-      sortable: true,
-    },
-    {
-      name: 'Current Epoch',
-      selector: (row) => row.currentEpoch,
       sortable: true,
     },
     {
