@@ -383,7 +383,7 @@ function ButTugModal(props) {
 
       setLoading(false);
       setAmount(0);
-      setnoOfShares('0');
+      setnoOfShares(0);
       setTugModal(false);
       setBuySide(symbols[sideS]);
       setModalShow(true);
@@ -473,7 +473,7 @@ function ButTugModal(props) {
           loading ? null
             : (
               <Modal.Title id="contained-modal-title-vcenter" className="h5">
-                <CloseButton className="clsBtn" variant="white" onClick={() => { setTugModal(false); setAmount(0); setDropdownTitle('Choose side'); setnoOfShares('0'); }} />
+                <CloseButton className="clsBtn" variant="white" onClick={() => { setTugModal(false); setAmount(0); setDropdownTitle('Choose side'); setnoOfShares(0); }} />
                 <Container>
                   <Row className="w-100 amount-dai-header">
                     <Col xs={4}>
