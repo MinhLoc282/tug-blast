@@ -97,7 +97,7 @@ function TugClaimSuccesModal(props) {
     bgpayoff, ethbshare, ebtcshare, ebpayoff,
     btcgFullshare, bgoldFullshare,
     bgFullpayoff, ethbFullshare, ebtcFullshare, ebFullpayoff,
-    totalclaimpayoff, setPageLoad,
+    totalpayoff, totalclaimpayoff, setPageLoad,
   } = props;
 
   return (
@@ -179,7 +179,7 @@ function TugClaimSuccesModal(props) {
           <Row className="w-100">
             <Col sm={6}>
               <small className="mb-1">Total</small>
-              <h1 className="mb-0">{totalclaimpayoff}</h1>
+              <h1 className="mb-0">{totalpayoff}</h1>
             </Col>
             <Col sm={6} className="text-end">
               <Button className="synth-tokenbtn">
