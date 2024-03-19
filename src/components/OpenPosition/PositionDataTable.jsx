@@ -1211,13 +1211,13 @@ function PositionDataTable() {
               <li hidden={!row.token0SharesHeld} className="payOffAB">
                 <span className="payOffA">
                   {' '}
-                  {row.currentPayoffAWin.toFixed(4)}
+                  {row.currentPayoffAWin.toFixed(7)}
                   /
                   {' '}
                 </span>
                 <span className="payOffB">
                   {' '}
-                  {row.currentPayoffALose.toFixed(4)}
+                  {row.currentPayoffALose.toFixed(7)}
                 </span>
               </li>
 
@@ -1227,13 +1227,13 @@ function PositionDataTable() {
               <li hidden={!row.token1SharesHeld} className="payOffAB">
                 <span className="payOffA">
                   {' '}
-                  {row.currentPayoffBWin.toFixed(4)}
+                  {row.currentPayoffBWin.toFixed(7)}
                   /
                   {' '}
                 </span>
                 <span className="payOffB">
                   {' '}
-                  {row.currentPayoffBLose.toFixed(4)}
+                  {row.currentPayoffBLose.toFixed(7)}
                 </span>
               </li>
             </ul>
@@ -1243,11 +1243,11 @@ function PositionDataTable() {
         return (
           <p className="totalPayOffAB">
             <span className="payOffA">
-              {row.totalWinPayOff.toFixed(4)}
+              {row.totalWinPayOff.toFixed(7)}
               /
             </span>
             <span className="payOffB">
-              {row.totalLosePayOff.toFixed(4)}
+              {row.totalLosePayOff.toFixed(7)}
             </span>
           </p>
         );
