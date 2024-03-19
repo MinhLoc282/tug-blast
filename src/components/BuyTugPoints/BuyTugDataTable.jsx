@@ -978,24 +978,18 @@ function BuyTugDataTable() {
         const tokenAprice = ((TOKEN0currentPrice - token0Initialprice) / token0Initialprice) * 100;
         const tokenBprice = ((TOKEN1currentPrice - token1Initialprice) / token1Initialprice) * 100;
 
-        let currentPayoffA = 0;
-        let currentPayoffB = 0;
+        const totalToken0 = parseFloat(totalToken0Shares);
+        const totalToken1 = parseFloat(totalToken1Shares);
 
-        // if (pair.type === 'Yield') {
-        //   const payoffs = calculateCurrentPayoffs(tugDuration, totalPoolSize, totalToken0Shares, sharesForOneDai0, totalToken1Shares, sharesForOneDai1, yieldMultiplier);
-        //   currentPayoffA = payoffs.currentPayoffA;
-        //   currentPayoffB = payoffs.currentPayoffB;
-        // } else {
-        //   // currentPayoffA = (((parseFloat(totalPoolSize) * (0.79))
-        //   //   / (parseFloat(totalToken0Shares) + parseFloat(sharesForOneDai0)))
-        //   //   * parseFloat(sharesForOneDai0)) || 0;
-        //   currentPayoffA = 0;
+        let currentPayoffA, currentPayoffB;
 
-        //   // currentPayoffB = (((parseFloat(totalPoolSize) * (0.79))
-        //   //   / (parseFloat(totalToken1Shares) + parseFloat(sharesForOneDai1)))
-        //   //   * parseFloat(sharesForOneDai1)) || 0;
-        //   currentPayoffB = 0;
-        // }
+        if (totalToken0 === 0 && totalToken1 === 0) {
+            currentPayoffA = 0;
+            currentPayoffB = 0;
+        } else {
+            currentPayoffA = totalToken0 === 0 ? 0 : 0.79 / (totalToken0 / (totalToken0 + totalToken1));
+            currentPayoffB = totalToken1 === 0 ? 0 : 0.79 / (totalToken1 / (totalToken0 + totalToken1));
+        }
 
         let tokenADeposit = (parseFloat(totalToken0Shares)
             / (parseFloat(totalToken0Shares) + parseFloat(totalToken1Shares))) * 100;
@@ -1070,44 +1064,43 @@ function BuyTugDataTable() {
 
   const debouncedMain = useCallback(debounce(main, 1000), [main]);
 
-  useEffect(() => {
-    const delayedUpdate = debounce(() => {
-        if (yieldMultiplier && buyTugData && tugDur) {
-            const updatedData = buyTugData.map(item => {
-              if (item.type === "Full") {
-                return {
-                  ...item,
-                }
-              }
+  // useEffect(() => {
+  //   const delayedUpdate = debounce(() => {
+  //       if (yieldMultiplier && buyTugData && tugDur) {
+  //           const updatedData = buyTugData.map(item => {
+  //             if (item.type === "Full") {
+  //               return {
+  //                 ...item,
+  //               }
+  //             }
 
-              const totalPoolBigNum = new BigNumber(item.totalPoolSize);
-              const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
-              const payoffs = calculateCurrentPayoffs(
-                  totalPoolSize,
-                  item.totalToken0Shares,
-                  item.sharesForOneDai0,
-                  item.totalToken1Shares,
-                  item.sharesForOneDai1,
-                  yieldMultiplier
-              );
+  //             const totalPoolBigNum = new BigNumber(item.totalPoolSize);
+  //             const totalPoolSize = totalPoolBigNum.times(new BigNumber(10).pow(9));
+  //             const payoffs = calculateCurrentPayoffs(
+  //                 totalPoolSize,
+  //                 item.totalToken0Shares,
+  //                 item.sharesForOneDai0,
+  //                 item.totalToken1Shares,
+  //                 item.sharesForOneDai1,
+  //                 yieldMultiplier
+  //             );
 
-              return {
-                  ...item,
-                  currentPayoffA: payoffs.currentPayoffA,
-                  currentPayoffB: payoffs.currentPayoffB
-              };
-            });
-            setBuyTugData(updatedData);
-        }
-    }, 1000);
+  //             return {
+  //                 ...item,
+  //                 currentPayoffA: payoffs.currentPayoffA,
+  //                 currentPayoffB: payoffs.currentPayoffB
+  //             };
+  //           });
+  //           setBuyTugData(updatedData);
+  //       }
+  //   }, 1000);
 
-    delayedUpdate();
+  //   delayedUpdate();
 
-    return () => {
-        delayedUpdate.cancel();
-    };
-  }, [yieldMultiplier, tugDur]);
-
+  //   return () => {
+  //       delayedUpdate.cancel();
+  //   };
+  // }, [yieldMultiplier, tugDur]);
 
   useEffect(() => {
     if (
@@ -1276,10 +1269,10 @@ function BuyTugDataTable() {
       sortable: true,
     },
     {
-      name: 'Current payoff per WETH (A wins/B wins)',
+      name: 'Win Multiplier',
       selector: (row) => (
         <span style={{ color: '#9584FF' }}>
-          {`${row.currentPayoffA.toFixed(4)}/${row.currentPayoffB.toFixed(4)}`}
+          {`${row.currentPayoffA.toFixed(2)}x/${row.currentPayoffB.toFixed(2)}x`}
         </span>
       ),
       sortable: true,
